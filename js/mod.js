@@ -1,8 +1,8 @@
 let modInfo = {
-	name: "The ??? Tree",
-	id: "mymod",
-	author: "nobody",
-	pointsName: "points",
+	name: "The NecromanTree",
+	id: "eggbrahamtree",
+	author: "eggbraham",
+	pointsName: "corpses",
 	discordName: "",
 	discordLink: "",
 	changelogLink: "https://github.com/Acamaeda/The-Modding-Tree/blob/master/changelog.md",
@@ -13,8 +13,8 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.0",
-	name: "Literally nothing",
+	num: "0.1",
+	name: "Nefarious Newborn",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
@@ -27,15 +27,22 @@ function getStartPoints(){
 
 // Determines if it should show points/sec
 function canGenPoints(){
-	return true
+	return hasUpgrade("z", 11)
 }
 
 // Calculate points/sec!
 function getPointGen() {
-	if(!canGenPoints())
-		return new Decimal(0)
+	if(!canGenPoints()) { return new Decimal(0) }
 
 	let gain = new Decimal(1)
+
+	if (player.a.unlocked) gain = gain.plus(tmp.a.effect)
+
+	if (hasUpgrade("z", 11)) { gain = gain.times(upgradeEffect("z", 11)) }
+	if (hasUpgrade("z", 12)) { gain = gain.times(upgradeEffect("z", 12)) }
+	if (hasUpgrade("z", 13)) { gain = gain.times(upgradeEffect("z", 13)) }
+	if (hasUpgrade("z", 23)) { gain = gain.times(upgradeEffect("z", 12)) }
+
 	return gain
 }
 
