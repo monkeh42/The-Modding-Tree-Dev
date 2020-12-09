@@ -53,6 +53,7 @@ addLayer("z", {
     doReset(resettingLayer) {
         let keep = [];
         if (hasMilestone("a", 0) && resettingLayer=="a") keep.push("upgrades")
+        if (hasMilestone("f", 0) && resettingLayer=="f") keep.push("upgrades")
         if (layers[resettingLayer].row > this.row) layerDataReset("z", keep)
     },
     upCostMult: new Decimal(1),
