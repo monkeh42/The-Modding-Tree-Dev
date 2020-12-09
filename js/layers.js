@@ -21,6 +21,7 @@ addLayer("z", {
         if (hasUpgrade("z", 22)) { mult = mult.times(upgradeEffect("z", 22)) }
         if (hasUpgrade("z", 31)) { mult = mult.times(upgradeEffect("z", 31)) }
         if (hasUpgrade("a", 11)) { mult = mult.times(upgradeEffect("a", 11)) }
+        if (hasUpgrade("f", 11)) { mult = mult.times(upgradeEffect("f", 11)) }
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -179,6 +180,7 @@ addLayer("a", {
     base: 4,
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
+        if (hasUpgrade("f", 12)) { mult = mult.times(upgradeEffect("f", 12)) }
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -201,7 +203,7 @@ addLayer("a", {
         eff = player.a.points
         // if (eff.gt(this.scThresh)) eff = eff.minus(this.scThresh).pow(this.scExp).plus(this.scThresh)
         eff = eff.pow(this.effectExp())
-        if (hasMilestone("f", 1)) eff = eff.times(tmp.f.powerEff)
+        if (hasMilestone("f", 1)) eff = eff.times(tmp.f.powerEff.pow(0.5))
         return eff
     },
     effectDescription() { return "which are giving +"+format(tmp.a.effect)+" to base corpse gain" },
@@ -220,7 +222,7 @@ addLayer("a", {
             description: "Total abominations boost zombie gain.",
             cost() { return tmp.a.upCostMult.times(2) },
             effect() {
-                eff = player.a.best.sqrt().plus(1)
+                eff = player.a.best.sqrt().plus(2)
                 return eff
             },
             effectDisplay() { return format(tmp.a.upgrades[11].effect)+"x" },
@@ -277,7 +279,7 @@ addLayer("f", {
     baseAmount() {return player.points}, // Get the current amount of baseResource
     type: "static", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     exponent: 1.25, // Prestige currency exponent
-    base: 4,
+    base: 5,
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
         return mult
@@ -305,7 +307,7 @@ addLayer("f", {
         return exp
     },
     powerEff() {
-        return player.f.power.plus(1).pow(this.powerExp())
+        return player.f.power.plus(1).pow(this.powerExp()).div(2)
     },
     effectDescription() { 
         return "which are manufacturing "+format(tmp.f.effect)+" armaments/sec" //+(tmp.nerdMode?("\n ("+format(tmp.g.effBase)+"x each)"):"") 
@@ -327,6 +329,30 @@ addLayer("f", {
     ],
     layerShown() { return player.z.unlocked },
     upCostMult: new Decimal(1), 
+    upgrades: {
+        rows: 2,
+        cols: 4,
+        11: {
+            title: "Corpse Processing Facility",
+            description: "Death factories boost zombie gain.",
+            cost() { return tmp.f.upCostMult.times(2) },
+            effect() {
+                eff = player.f.points.plus(1).pow(1/3)
+                return eff
+            },
+            effectDisplay() { return format(tmp.f.upgrades[11].effect)+"x" },
+        },
+        12: {
+            title: "Zombie Processing Facility",
+            description: "Death factories boost abomination gain.",
+            cost() { return tmp.f.upCostMult.times(4) },
+            effect() {
+                let eff = player.f.total.plus(1).log10().plus(1)
+                return eff
+            },
+            effectDisplay() { return format(tmp.f.upgrades[12].effect)+"x" },
+        },
+    }, 
     milestones: {
         0: {
             requirementDescription: "5 death factories",
@@ -336,7 +362,7 @@ addLayer("f", {
         1: {
             requirementDescription: "10 death factories",
             done() { return player.f.best.gte(10) },
-            effectDescription: "Armaments also affect abominations",
+            effectDescription: "Armaments also affect abominations with reduced effect",
         },
         2: {
             requirementDescription: "15 death factories",
