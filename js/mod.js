@@ -38,10 +38,10 @@ function getPointGen() {
 
 	if (player.a.unlocked) gain = gain.plus(tmp.a.effect)
 
-	if (hasUpgrade("z", 11)) { gain = gain.times(upgradeEffect("z", 11)) }
+	gain = gain.times(tmp.z.effect) 
 	if (hasUpgrade("z", 12)) { gain = gain.times(upgradeEffect("z", 12)) }
 	if (hasUpgrade("z", 13)) { gain = gain.times(upgradeEffect("z", 13)) }
-	if (hasUpgrade("z", 23)) { gain = gain.times(upgradeEffect("z", 12)) }
+	if (hasUpgrade("z", 23)) { gain = gain.times(upgradeEffect("z", 23)) }
 
 	return gain
 }
