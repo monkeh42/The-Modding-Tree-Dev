@@ -25,7 +25,7 @@ addLayer("z", {
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
         exp = new Decimal(1)
-        if (hasUpgrade("z", 33)) { exp = exp.pus(upgradeEffect("z", 33)) }
+        if (hasUpgrade("z", 33)) { exp = exp.plus(upgradeEffect("z", 33)) }
         return exp
     },
     effectExp() {
@@ -40,7 +40,7 @@ addLayer("z", {
     },
     effect() {
         let eff = tmp.z.effectBase.plus(player.z.points).pow(tmp.z.effectExp) 
-        if (player.f.unlocked) eff = eff.times(tmp.f.powerEff)
+        if (player.f.unlocked && player.z.points.gt(0)) eff = eff.times(tmp.f.powerEff)
         return eff
     },
     effectDescription() { return "which are boosting corpse gain by "+format(tmp.z.effect)+"x" },
@@ -145,7 +145,7 @@ addLayer("z", {
             cost() { return tmp.z.upCostMult.times(1000) },
             unlocked () { return hasUpgrade("z", 31) },
             effect() { 
-                let eff = player.a.points.plus(1).log10().plus(1).div(2)
+                let eff = player.a.points.plus(1).log10().div(5)
                 return eff
             },
             effectDisplay() { return "+"+format(tmp.z.upgrades[33].effect)+" to gain exponent" },
@@ -216,7 +216,7 @@ addLayer("a", {
         cols: 4,
         11: {
             title: "Recycle Leftover Parts",
-            description: "Best abominations boost zombie gain.",
+            description: "Total abominations boost zombie gain.",
             cost() { return tmp.a.upCostMult.times(2) },
             effect() {
                 eff = player.a.best.sqrt().plus(1)
@@ -227,9 +227,9 @@ addLayer("a", {
         12: {
             title: "Part Time Job",
             description: "Abominations boost armament production.",
-            cost() { return tmp.a.upCostMult.times(6) },
+            cost() { return tmp.a.upCostMult.times(4) },
             effect() {
-                eff = player.a.points.log10().sqrt().div(3)
+                eff = player.a.points.plus(2).log10().sqrt().div(3)
                 return eff
             },
             effectDisplay() { return "+"+format(tmp.a.upgrades[12].effect)+" to base production" },
