@@ -136,7 +136,7 @@ function updateLayers(){
 
         if(!layers[layer].componentStyles) layers[layer].componentStyles = {}
         if(layers[layer].symbol === undefined) layers[layer].symbol = layer.charAt(0).toUpperCase() + layer.slice(1)
-        if(layers[layer].unlockOrder === undefined) layers[layer].unlockOrder = []
+        if(layers[layer].unlockOrder === undefined) layers[layer].unlockOrder = 0
         if(layers[layer].gainMult === undefined) layers[layer].gainMult = new Decimal(1)
         if(layers[layer].gainExp === undefined) layers[layer].gainExp = new Decimal(1)
         if(layers[layer].type === undefined) layers[layer].type = "none"

@@ -8,7 +8,7 @@ addLayer("z", {
         best: new Decimal(0),
         total: new Decimal(0),
     }},
-    resetDescription: "stitch corpses together for ",
+    resetDescription: "Stitch corpses together for ",
     color: "#5E1849",
     requires: new Decimal(10), // Can be a function that takes requirement increases into account
     resource: "zombies", // Name of prestige currency
@@ -18,22 +18,24 @@ addLayer("z", {
     exponent: 0.5, // Prestige currency exponent
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
-        if (hasUpgrade("z", 21)) { mult = mult.times(upgradeEffect("z", 21)) }
         if (hasUpgrade("z", 22)) { mult = mult.times(upgradeEffect("z", 22)) }
+        if (hasUpgrade("z", 31)) { mult = mult.times(upgradeEffect("z", 31)) }
         if (hasUpgrade("a", 11)) { mult = mult.times(upgradeEffect("a", 11)) }
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
-        return new Decimal(1)
+        exp = new Decimal(1)
+        if (hasUpgrade("z", 33)) { exp = exp.pus(upgradeEffect("z", 33)) }
+        return exp
     },
     effectExp() {
-        let exp = new Decimal(0.25)
-        if (hasUpgrade("z", 14)) { exp = exp.plus(upgradeEffect("z", 14)) }
+        let exp = new Decimal(0.5)
+        if (hasUpgrade("z", 13)) { exp = exp.plus(upgradeEffect("z", 13)) }
         return exp
     },
     effectBase() {
         let eff = new Decimal(1)
-        if (hasUpgrade("z", 24)) { eff = eff.plus(upgradeEffect("z", 24)) } 
+        if (hasUpgrade("z", 32)) { eff = eff.plus(upgradeEffect("z", 32)) } 
         return eff
     },
     effect() {
@@ -55,8 +57,8 @@ addLayer("z", {
     },
     upCostMult: new Decimal(1),
     upgrades: {
-        rows: 2,
-        cols: 4,
+        rows: 3,
+        cols: 3,
         11: {
             title: "Begin Harvest",
             description: "Send your zombies into the world to harvest corpses. Base 1/sec, boosted slightly by zombies.",
@@ -65,7 +67,7 @@ addLayer("z", {
         12: {
             title: "Disease",
             description: "Gain more corpses the more corpses you have.",
-            cost() { return tmp.z.upCostMult.times(2) },
+            cost() { return tmp.z.upCostMult.times(1) },
             unlocked() { return hasUpgrade("z", 11) },
             effect() { 
                 let eff = player.points.plus(1).log10().pow(0.75).plus(1) 
@@ -74,46 +76,35 @@ addLayer("z", {
             effectDisplay() { return format(tmp.z.upgrades[12].effect)+"x" },
         },
         13: {
-            title: "Wheelbarrows",
-            description: "Recover more intact corpses. Doubles corpse gain.",
+            title: "Bigger Zombies",
+            description: "Zombies are more effective to corpse gain.",
             cost() { return tmp.z.upCostMult.times(5) },
             unlocked() { return hasUpgrade("z", 12) },
             effect() { 
-                let eff = new Decimal(2)
+                let eff = new Decimal(0.2)
                 return eff
             },
-        },
-        14: {
-            title: "Bigger Zombies",
-            description: "Zombies are more effective to corpse gain.",
-            cost() { return tmp.z.upCostMult.times(15) },
-            unlocked() { return hasUpgrade("z", 13) },
-            effect() { 
-                let eff = new Decimal(0.1)
-                return eff
-            },
-            effectDisplay() { return "+"+format(tmp.z.upgrades[14].effect)+" to effect exponent" },
+            effectDisplay() { return "+"+format(tmp.z.upgrades[13].effect)+" to effect exponent" },
         },
         21: {
-            title: "Advanced Necromancy",
-            description: "Learn more efficient zombie creation techniques. Doubles zombie gain.",
-            cost() { return tmp.z.upCostMult.times(25) },
-            unlocked () { return hasUpgrade("z", 14) },
+            title: "Wheelbarrows",
+            description: "Recover more intact corpses. Doubles corpse gain.",
+            cost() { return tmp.z.upCostMult.times(15) },
+            unlocked() { return player.a.unlocked || player.f.unlocked },
             effect() { 
                 let eff = new Decimal(2)
                 return eff
             },
         },
         22: {
-            title: "Practice Makes Perfect",
-            description: "Boost zombie gain based on total zombies made.",
-            cost() { return tmp.z.upCostMult.times(50) },
+            title: "Advanced Necromancy",
+            description: "Learn more efficient zombie creation techniques. Doubles zombie gain.",
+            cost() { return tmp.z.upCostMult.times(40) },
             unlocked () { return hasUpgrade("z", 21) },
             effect() { 
-                let eff = player.z.total.plus(1).log10().plus(1).pow(0.5).plus(1)
+                let eff = new Decimal(2)
                 return eff
             },
-            effectDisplay() { return format(tmp.z.upgrades[22].effect)+"x" },
         },
         23: {
             title: "Zombie Training School",
@@ -126,16 +117,38 @@ addLayer("z", {
             },
             effectDisplay() { return format(tmp.z.upgrades[23].effect)+"x" },
         }, 
-        24: {
-            title: "Morale Boost",
-            description: "Boost zombie effectiveness based on abomminations.",
+        31: {
+            title: "Practice Makes Perfect",
+            description: "Boost zombie gain based on total zombies made.",
             cost() { return tmp.z.upCostMult.times(500) },
-            unlocked () { return hasUpgrade("z", 23) && player.a.unlocked },
+            unlocked () { return player.a.unlocked && player.f.unlocked },
+            effect() { 
+                let eff = player.z.total.plus(1).log10().plus(1).pow(0.5).plus(1)
+                return eff
+            },
+            effectDisplay() { return format(tmp.z.upgrades[31].effect)+"x" },
+        },
+        32: {
+            title: "Morale Boost",
+            description: "Boost zombie effectiveness based on abominations.",
+            cost() { return tmp.z.upCostMult.times(1000) },
+            unlocked () { return hasUpgrade("z", 31) },
             effect() { 
                 let eff = player.a.points.plus(1).log10().plus(1)
                 return eff
             },
-            effectDisplay() { return "+"+format(tmp.z.upgrades[24].effect)+" to effect base" },
+            effectDisplay() { return "+"+format(tmp.z.upgrades[32].effect)+" to effect base" },
+        }, 
+        33: {
+            title: "Zombie Fabricators",
+            description: "Boost zombie gain based on death factories.",
+            cost() { return tmp.z.upCostMult.times(1000) },
+            unlocked () { return hasUpgrade("z", 31) },
+            effect() { 
+                let eff = player.a.points.plus(1).log10().plus(1).div(2)
+                return eff
+            },
+            effectDisplay() { return "+"+format(tmp.z.upgrades[33].effect)+" to gain exponent" },
         }, 
     },
     
@@ -150,11 +163,13 @@ addLayer("a", {
         points: new Decimal(0),
         best: new Decimal(0),
         total: new Decimal(0),
+        // unlockOrder: new Decimal(0),
     }},
-    resetDescription: "amalgamate zombies for ",
+    increaseUnlockOrder: ["f"],
+    resetDescription: "Amalgamate zombies for ",
     branches: ["z"],
     color: "#C7002A",
-    requires: new Decimal(200), // Can be a function that takes requirement increases into account
+    requires() { return new Decimal(10).times((tmp["a"].unlockOrder && !player.a.unlocked)?100:1) }, // Can be a function that takes requirement increases into account
     resource: "abominations", // Name of prestige currency
     baseResource: "zombies", // Name of resource prestige is based on
     baseAmount() {return player.z.points}, // Get the current amount of baseResource
@@ -184,8 +199,8 @@ addLayer("a", {
     effect() {
         eff = player.a.points
         // if (eff.gt(this.scThresh)) eff = eff.minus(this.scThresh).pow(this.scExp).plus(this.scThresh)
-        eff = eff.pow(this.effectExp)
-        if (player.f.unlocked) eff = eff.times(tmp.f.powerEff)
+        eff = eff.pow(this.effectExp())
+        if (hasMilestone("f", 1)) eff = eff.times(tmp.f.powerEff)
         return eff
     },
     effectDescription() { return "which are giving +"+format(tmp.a.effect)+" to base corpse gain" },
@@ -249,11 +264,13 @@ addLayer("f", {
         power: new Decimal(0),
         best: new Decimal(0),
         total: new Decimal(0),
+        // unlockOrder: new Decimal(0),
     }},
-    resetDescription: "reanimate corpses to operate ",
+    increaseUnlockOrder: ["a"],
+    resetDescription: "Reanimate corpses to operate ",
     branches: ["z"],
     color: "#C7002A",
-    requires: new Decimal(5000), // Can be a function that takes requirement increases into account
+    requires() { return new Decimal(200).times((tmp["f"].unlockOrder && !player.f.unlocked)?5000:1) }, // Can be a function that takes requirement increases into account
     resource: "death factories", // Name of prestige currency
     baseResource: "corpses", // Name of resource prestige is based on
     baseAmount() {return player.points}, // Get the current amount of baseResource
@@ -274,7 +291,7 @@ addLayer("f", {
         return base
     },
     effect() {
-        eff = Decimal.pow(this.effBase, player.f.points).sub(1).max(0)
+        eff = Decimal.pow(this.effBase(), player.f.points).sub(1).max(0)
 
         return eff
     },
@@ -287,7 +304,7 @@ addLayer("f", {
         return exp
     },
     powerEff() {
-        return player.f.power.plus(1).pow(this.powerExp)
+        return player.f.power.plus(1).pow(this.powerExp())
     },
     effectDescription() { 
         return "which are manufacturing "+format(tmp.f.effect)+" armaments/sec" //+(tmp.nerdMode?("\n ("+format(tmp.g.effBase)+"x each)"):"") 
@@ -302,7 +319,7 @@ addLayer("f", {
 			function() {return 'Your best armaments is ' + formatWhole(player.f.best) + '<br>You have made a total of '+formatWhole(player.f.total)+" armaments."}, {}],
 		"blank",
 		"milestones", "blank", "blank", "upgrades"],
-    canBuyMax() { return hasMilestone("a", 1) },
+    canBuyMax() { return hasMilestone("f", 2) },
     row: 1, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
         {key: "f", description: "f: reanimate corpses to operate death factories", onPress(){if (canReset(this.layer)) doReset(this.layer)}},

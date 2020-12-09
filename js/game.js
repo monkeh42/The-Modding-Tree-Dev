@@ -177,7 +177,7 @@ function doReset(layer, force=false) {
 			if (tmp[layer].increaseUnlockOrder){
 				lrs = tmp[layer].increaseUnlockOrder
 				for (lr in lrs)
-					if (!player[lrs[lr]].unlocked) player[lrs[lr]].unlockOrder++
+					if (!player[lrs[lr]].unlocked) tmp[lrs[lr]].unlockOrder++
 			}
 		}
 	
