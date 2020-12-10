@@ -141,9 +141,14 @@ function updateLayers(){
         if(layers[layer].gainExp === undefined) layers[layer].gainExp = new Decimal(1)
         if(layers[layer].type === undefined) layers[layer].type = "none"
         if(layers[layer].base === undefined || layers[layer].base <= 1) layers[layer].base = 2
+        if(layers[layer].altBase === undefined || layers[layer].altBase <= 1) layers[layer].altBase = 2
+        if(layers[layer].altExp === undefined) layers[layer].altExp = 0.5
         if(layers[layer].softcap === undefined) layers[layer].softcap = new Decimal("e1e7")
         if(layers[layer].softcapPower === undefined) layers[layer].softcapPower = new Decimal("0.5")
         if(layers[layer].displayRow === undefined) layers[layer].displayRow = layers[layer].row
+        if(layers[layer].altRequires === undefined) layers[layer].altRequires = 0
+        if(layers[layer].altResource === undefined) layers[layer].altResource = "none"
+        if(layers[layer].altBaseAmount === undefined) layers[layer].altBaseAmount = 0
 
         let row = layers[layer].row
 

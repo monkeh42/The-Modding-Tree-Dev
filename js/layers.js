@@ -55,6 +55,7 @@ addLayer("z", {
         let keep = [];
         if (hasMilestone("a", 0) && resettingLayer=="a") keep.push("upgrades")
         if (hasMilestone("f", 0) && resettingLayer=="f") keep.push("upgrades")
+        if (hasMilestone("p", 1) && resettingLayer=="p") keep.push("upgrades")
         if (layers[resettingLayer].row > this.row) layerDataReset("z", keep)
     },
     upCostMult: new Decimal(1),
@@ -212,6 +213,23 @@ addLayer("a", {
     hotkeys: [
         {key: "a", description: "a: amalgamate your zombies into abominations", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
+    doReset(resettingLayer) {
+        let keep = [];
+        let keep1 = [];
+        if (hasMilestone("p", 0) && resettingLayer=="p") {
+            num = Math.min(3, player.p.resets)
+
+            all = ["0", "1", "2"]
+
+            for (i=0; i<num; i++) {
+                keep1.push(all[i])
+            }
+        }
+
+        if (hasMilestone("p", 2) && resettingLayer=="p") keep.push("upgrades")
+        if (layers[resettingLayer].row > this.row) layerDataReset("a", keep)
+        if (hasMilestone("p", 0) && resettingLayer=="p") { player.a.milestones = filter(player.a.milestones, keep1) }
+    },
     layerShown() { return player.z.unlocked },
     upCostMult: new Decimal(1),
     upgrades: {
@@ -327,6 +345,23 @@ addLayer("f", {
     hotkeys: [
         {key: "f", description: "f: reanimate corpses to operate death factories", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
+    doReset(resettingLayer) {
+        let keep = [];
+        let keep1 = [];
+        if (hasMilestone("p", 0) && resettingLayer=="p") {
+            num = Math.min(3, player.p.resets)
+
+            all = ["0", "1", "2"]
+
+            for (i=0; i<num; i++) {
+                keep1.push(all[i])
+            }
+        }
+
+        if (hasMilestone("p", 2) && resettingLayer=="p") keep.push("upgrades")
+        if (layers[resettingLayer].row > this.row) layerDataReset("f", keep)
+        if (hasMilestone("p", 0) && resettingLayer=="p") { player.f.milestones = filter(player.f.milestones, keep1) }
+    },
     layerShown() { return player.z.unlocked },
     upCostMult: new Decimal(1), 
     upgrades: {
@@ -370,4 +405,328 @@ addLayer("f", {
             effectDescription: "You can buy max death factories",
         },
     },
+})
+
+addLayer("p", {
+    name: "exterminated planets", // This is optional, only used in a few places, If absent it just uses the layer id.
+    symbol: "P", // This appears on the layer's node. Default is the id with the first letter capitalized
+    position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    startData() { return {                  // startData is a function that returns default data for a layer. 
+        unlocked: false,                     // You can add more variables here to add them to your layer.
+        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
+        total: new Decimal(0),
+        resets: new Decimal(0),
+    }},
+    branches: ["a", "f"],
+    resetDescription: "Ascend to a new world for ",
+    position: 0,
+    color: "#0D58C4",                       // The color for this layer, which affects many elements.
+    resource: "exterminated planets",            // The name of this layer's main prestige resource.
+    row: 2,                                 // The row this layer is on (0 is the first row).
+    baseResource: "corpses",                 // The name of the resource your prestige gain is based on.
+    baseAmount() { return player.points },  // A function to return the current amount of baseResource.
+    requires: new Decimal("1e100"),              // The amount of the base needed to  gain 1 of the prestige currency. Also the amount required to unlock the layer.
+    type: "static",                         // Determines the formula used for calculating prestige currency.
+    exponent: 0.5,
+    base: 5,
+    gainMult() { // Calculate the multiplier for main currency from bonuses
+        mult = new Decimal(1)
+        return mult
+    },
+    gainExp() { // Calculate the exponent on main currency from bonuses
+        return new Decimal(1)
+    },
+    effBase() {
+        base = new Decimal(2)
+        if(hasUpgrade("a", 12)) base = base.plus(upgradeEffect("a", 12))
+
+        return base
+    },
+    effect() {
+        eff = Decimal.pow(this.effBase(), player.f.points).sub(1).max(0)
+
+        return eff
+    },
+    effectDescription() { 
+        return "which are manufacturing "+format(tmp.f.effect)+" armaments/sec" //+(tmp.nerdMode?("\n ("+format(tmp.g.effBase)+"x each)"):"") 
+    },
+    tabFormat: ["main-display",
+		"prestige-button",
+		"blank",
+		["display-text",
+			function() {return 'You have exterminated a total of '+formatWhole(player.p.total)+" planets." + '<br>You have ascended '+formatWhole(player.p.resets)+" times."}, {}],
+		"blank",
+		"milestones", "blank", "blank", "upgrades"],
+    canBuyMax() { return false },
+    hotkeys: [
+        {key: "p", description: "p: ascend to a new world for exterminated planets", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+    ],
+    upCostMult: new Decimal(1), 
+    layerShown() { return player.a.unlocked && player.f.unlocked },            // Returns a bool for if this layer's node should be visible in the tree.
+    onPrestige(gain) { player.p.resets.plus(1) },
+    milestones: {
+        0: {
+            requirementDescription: "1 total exterminated planets",
+            done() { return player.p.total.gte(5) },
+            effectDescription: "For each ascension, keep one abomination and death factory milestone on reset",
+        },
+        1: {
+            requirementDescription: "10 total exterminated planets",
+            done() { return player.p.total.gte(10) },
+            effectDescription: "Keep zombie upgrades on reset",
+        },
+        2: {
+            requirementDescription: "20 total exterminated planets",
+            done() { return player.p.total.gte(15) },
+            effectDescription: "Keep abomination and death factory upgrades on reset",
+        },
+    },
+})
+
+addLayer("w", {
+    name: "witch doctors", // This is optional, only used in a few places, If absent it just uses the layer id.
+    symbol: "W", // This appears on the layer's node. Default is the id with the first letter capitalized
+    position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    startData() { return {
+        unlocked: false,
+        points: new Decimal(0),
+        power: new Decimal(0),
+        best: new Decimal(0),
+        total: new Decimal(0),
+    }},
+    row: 3,
+    resetDescription: "Sacrifice corpses to recruit ",
+    color: "#8EA018",
+    branches: ["p"],
+    requires: new Decimal("1e100"), // Can be a function that takes requirement increases into account
+    resource: "witch doctors", // Name of prestige currency
+    baseResource: "corpses", // Name of resource prestige is based on
+    baseAmount() {return player.points}, // Get the current amount of baseResource
+    type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+    exponent: 0.1, // Prestige currency exponent
+    hotkeys: [
+        {key: "w", description: "w: sacrifice corpses to recruit witch doctors", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+    ],
+    layerShown() { return "ghost" },
+    upCostMult: new Decimal(1),
+})
+
+addLayer("s", {
+    name: "skeleton mages", // This is optional, only used in a few places, If absent it just uses the layer id.
+    symbol: "S", // This appears on the layer's node. Default is the id with the first letter capitalized
+    position: 1, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    startData() { return {
+        unlocked: false,
+        points: new Decimal(0),
+        power: new Decimal(0),
+        best: new Decimal(0),
+        total: new Decimal(0),
+    }},
+    resetDescription: "Transform zombies into ",
+    color: "#F0E6E8",
+    branches: ["p"],
+    requires: new Decimal("1e100"), // Can be a function that takes requirement increases into account
+    resource: "skeleton mages", // Name of prestige currency
+    baseResource: "zombies", // Name of resource prestige is based on
+    baseAmount() {return player.z.points}, // Get the current amount of baseResource
+    type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+    exponent: 0.1, // Prestige currency exponent
+    gainMult() { // Calculate the multiplier for main currency from bonuses
+        mult = new Decimal(1)
+        return mult
+    },
+    gainExp() { // Calculate the exponent on main currency from bonuses
+        exp = new Decimal(1)
+        return exp
+    },
+    effBase() {
+        base = new Decimal(2)
+
+        return base
+    },
+    effect() {
+        eff = Decimal.pow(this.effBase(), player.s.points).sub(1).max(0).div(2.5)
+
+        return eff
+    },
+    update(diff) {
+        if (player.s.unlocked) player.s.power = player.s.power.plus(tmp.s.effect.times(diff))
+    },
+    effectDescription() { 
+        return "which are producing "+format(tmp.s.effect)+" mana/sec" //+(tmp.nerdMode?("\n ("+format(tmp.g.effBase)+"x each)"):"") 
+    },
+    tabFormat: ["main-display",
+		"prestige-button",
+		"blank",
+		["display-text",
+			function() {return 'You have ' + format(player.s.power) + ' mana'}, {}],
+        "blank",
+        "clickables",
+        "blank",
+		"buyables", "blank", "blank", "upgrades"],
+    row: 3, // Row the layer is in on the tree (0 is the first row)
+    hotkeys: [
+        {key: "s", description: "s: transform your zombies into skeleton mages", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+    ],
+    layerShown() { return player.p.unlocked },
+    upCostMult: new Decimal(1),
+    clickables: {
+        rows: 1,
+        cols: 1,
+        11: {
+            display() { return "Respec spells" },
+            canClick() { return player[this.layer].spentOnBuyables },
+            onClick() { respecBuyables(this.layer) },
+            style: {
+                "height": "40px",
+	            "width": "90px",
+	            "border-radius": "50%",
+	            "border": "2px solid",
+	            "border-color": "rgba(0, 0, 0, 0.125)",
+	            "font-size": "10px",
+            }
+        },
+    },
+    buyables: {
+        rows: 1,
+        cols: 3,
+        11: {
+            title: "Spell 1",
+            cost(x=getBuyableAmount(this.layer, this.id)) { return new Decimal(5).pow(new Decimal(1.4).pow(x)) },
+            display() { 
+                let data = tmp[this.layer].buyables[this.id]
+                return ("Cost: " + formatWhole(data.cost) + " mana \n\
+                 Level: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n\
+                 Effect info here")
+            },
+            canAfford() { return player[this.layer].power.gte(tmp[this.layer].buyables[this.id].cost) },
+            buy() {
+                player[this.layer].power = player[this.layer].power.sub(tmp[this.layer].buyables[this.id].cost)
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+        },
+        12: {
+            title: "Spell 2",
+            cost(x=getBuyableAmount(this.layer, this.id)) { return new Decimal(25).pow(new Decimal(1.4).pow(x)) },
+            display() { 
+                let data = tmp[this.layer].buyables[this.id]
+                return ("Cost: " + formatWhole(data.cost) + " mana \n\
+                 Level: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n\
+                 Effect info here")
+            },
+            canAfford() { return player[this.layer].power.gte(this.cost) },
+            buy() {
+                player[this.layer].power = player[this.layer].power.sub(tmp[this.layer].buyables[this.id].cost)
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+        },
+        13: {
+            title: "Spell 3",
+            cost(x=getBuyableAmount(this.layer, this.id)) { return new Decimal(100).pow(new Decimal(1.4).pow(x)) },
+            display() { 
+                let data = tmp[this.layer].buyables[this.id]
+                return ("Cost: " + formatWhole(data.cost) + " mana \n\
+                 Level: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n\
+                 Effect info here")
+            },
+            canAfford() { return player[this.layer].power.gte(tmp[this.layer].buyables[this.id].cost) },
+            buy() {
+                player[this.layer].power = player[this.layer].power.sub(tmp[this.layer].buyables[this.id].cost)
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+        },
+    },
+})
+
+addLayer("g2", {
+    startData() { return {                  // startData is a function that returns default data for a layer. 
+        unlocked: false,                     // You can add more variables here to add them to your layer.
+        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
+    }},
+    position: 2,
+    color: "#4BDC13",                       // The color for this layer, which affects many elements.
+    resource: "prestige points",            // The name of this layer's main prestige resource.
+    row: 3,                                 // The row this layer is on (0 is the first row).
+    baseResource: "points",                 // The name of the resource your prestige gain is based on.
+    baseAmount() { return player.points },  // A function to return the current amount of baseResource.
+    requires: new Decimal(10),              // The amount of the base needed to  gain 1 of the prestige currency. Also the amount required to unlock the layer.
+    type: "normal",                         // Determines the formula used for calculating prestige currency.
+    exponent: 0.5,
+    layerShown() { return "ghost" }            // Returns a bool for if this layer's node should be visible in the tree.
+})
+
+addLayer("n", {
+    name: "necropoli", // This is optional, only used in a few places, If absent it just uses the layer id.
+    symbol: "N", // This appears on the layer's node. Default is the id with the first letter capitalized
+    position: 3, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
+    startData() { return {
+        unlocked: false,
+        points: new Decimal(0),
+        power: new Decimal(0),
+        best: new Decimal(0),
+        total: new Decimal(0),
+    }},
+    row: 3,
+    resetDescription: "Annihilate planets to form ",
+    color: "#000000",
+    branches: ["p"],
+    requires: new Decimal(10), // Can be a function that takes requirement increases into account
+    resource: "necropoli", // Name of prestige currency
+    baseResource: "planets", // Name of resource prestige is based on
+    baseAmount() {return player.p.points}, // Get the current amount of baseResource
+    altRequires: new Decimal("1e200"),
+    altResource: "corpses",
+    altBaseAmount() {return player.points},
+    type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
+    base: 5,
+    exponent: 0.1, // Prestige currency exponent
+    altBase: 5,
+    altExp: 0.5,
+    hotkeys: [
+        {key: "n", description: "n: annihilate planets to form necropoli", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+    ],
+    layerShown() { return player.p.unlocked },
+    canBuyMax() { return false },
+    upCostMult: new Decimal(1),
+    roundUpCost() { return true },
+    roundUpAltCost() { return false },
+    getResetGain() {
+        return getResetGain(this.layer, useType = "static")
+    },
+    getNextAt(canMax=false) {
+        return getNextAt(this.layer, canMax=false, useType = "static")
+    },
+    canReset() {
+        return canReset(this.layer)
+    },
+    prestigeNotify() { return true },
+    prestigeButtonText() {
+        return `${tmp[this.layer].resetDescription !== undefined ? tmp[this.layer].resetDescription : "Reset for "}+<b>${formatWhole(tmp[this.layer].resetGain)}</b> ${tmp[this.layer].resource}<br><br>Req: ${formatWhole(tmp[this.layer].baseAmount)} / ${(tmp[this.layer].roundUpCost ? formatWhole(tmp[this.layer].nextAt) : format(tmp[this.layer].nextAt))} ${ tmp[this.layer].baseResource }<br>and ${formatWhole(tmp[this.layer].altBaseAmount)} / ${(tmp[this.layer].roundUpAltCost ? formatWhole(tmp[this.layer].altNextAt) : format(tmp[this.layer].altNextAt))} ${tmp[this.layer].altResource}`
+    },
+    tooltipLocked() {
+        return `Reach ${tmp[this.layer].requires} ${tmp[this.layer].baseResource} and ${tmp[this.layer].altRequires} ${tmp[this.layer].altResource} to unlock (You have ${tmp[this.layer].baseAmount} ${tmp[this.layer].baseResource} and ${tmp[this.layer].altBaseAmount} ${tmp[this.layer].altResource})`
+    },
+    componentStyles: {
+        "prestige-button"() { return {'color': 'rgba(255, 255, 255, 0.5)'} }
+    },
+    nodeStyle: {
+        "color": "rgba(255, 255, 255, 0.5)",
+    },
+})
+
+addLayer("g3", {
+    startData() { return {                  // startData is a function that returns default data for a layer. 
+        unlocked: false,                     // You can add more variables here to add them to your layer.
+        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
+    }},
+    position: 4,
+    color: "#4BDC13",                       // The color for this layer, which affects many elements.
+    resource: "prestige points",            // The name of this layer's main prestige resource.
+    row: 3,                                 // The row this layer is on (0 is the first row).
+    baseResource: "points",                 // The name of the resource your prestige gain is based on.
+    baseAmount() { return player.points },  // A function to return the current amount of baseResource.
+    requires: new Decimal(10),              // The amount of the base needed to  gain 1 of the prestige currency. Also the amount required to unlock the layer.
+    type: "normal",                         // Determines the formula used for calculating prestige currency.
+    exponent: 0.5,
+    layerShown() { return "ghost" }            // Returns a bool for if this layer's node should be visible in the tree.
 })

@@ -27,6 +27,7 @@ function setupTemp() {
 		tmp[layer].resetGain = {}
 		tmp[layer].nextAt = {}
 		tmp[layer].nextAtDisp = {}
+		tmp[layer].altNextAt = {}
 		tmp[layer].canReset = {}
 		tmp[layer].notify = {}
 		tmp[layer].prestigeNotify = {}
@@ -71,6 +72,7 @@ function updateTemp() {
 	for (layer in layers){
 		tmp[layer].resetGain = getResetGain(layer)
 		tmp[layer].nextAt = getNextAt(layer)
+		tmp[layer].altNextAt = getAltNextAt(layer)
 		tmp[layer].nextAtDisp = getNextAt(layer, true)
 		tmp[layer].canReset = canReset(layer)
 		tmp[layer].notify = shouldNotify(layer)

@@ -57,7 +57,33 @@ function getNextAt(layer, canMax=false, useType = null) {
 		return layers[layer].getNextAt(canMax)
 	} else {
 		return new Decimal(0)
-	}}
+	}
+}
+
+function getAltNextAt(layer, useType = null) {
+	let type = useType
+	if (!useType) type = tmp[layer].type
+	if (tmp[layer].type == "none")
+		return new Decimal (Infinity)
+
+	if (tmp[layer].gainMult.lte(0)) return new Decimal(Infinity)
+	if (tmp[layer].gainExp.lte(0)) return new Decimal(Infinity)
+
+	if (type=="static") 
+	{
+		if (tmp[layer].canBuyMax)
+			return new Decimal(0)
+
+
+		let amt = player[layer].points
+		let extraCost = Decimal.pow(tmp[layer].altBase, amt.pow(tmp[layer].altExp).div(tmp[layer].gainExp)).times(tmp[layer].gainMult)
+		let cost = extraCost.times(tmp[layer].altRequires).max(tmp[layer].altRequires)
+		if (tmp[layer].roundUpAltCost) cost = cost.ceil()
+		return cost;
+	} else {
+		return new Decimal(0)
+	}
+}
 
 function softcap(value, cap, power = 0.5) {
 	if (value.lte(cap)) return value
@@ -90,11 +116,11 @@ function canReset(layer)
 	if(tmp[layer].type == "normal")
 		return tmp[layer].baseAmount.gte(tmp[layer].requires)
 	else if(tmp[layer].type== "static")
-		return tmp[layer].baseAmount.gte(tmp[layer].nextAt) 
+		return tmp[layer].baseAmount.gte(tmp[layer].nextAt)
 	if(tmp[layer].type == "none")
 		return false
 	else
-		return layers[layer].canReset()
+		return tmp[layer].baseAmount.gte(tmp[layer].nextAt) && (tmp[layer].altRequires == 0 || tmp[layer].altBaseAmount.gte(tmp[layer].altNextAt))
 }
 
 function rowReset(row, layer) {
