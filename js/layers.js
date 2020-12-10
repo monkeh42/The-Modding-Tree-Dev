@@ -240,7 +240,7 @@ addLayer("a", {
             description: "Total abominations boost zombie gain.",
             cost() { return tmp.a.upCostMult.times(2) },
             effect() {
-                eff = player.a.best.sqrt().plus(2)
+                eff = player.a.total.sqrt().plus(2)
                 return eff
             },
             effectDisplay() { return format(tmp.a.upgrades[11].effect)+"x" },
