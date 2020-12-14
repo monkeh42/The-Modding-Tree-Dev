@@ -137,28 +137,53 @@ function getStartPlayer() {
 		}
 	
 	}
+	for (layer in altLayers){
+		playerdata[layer] = getStartLayerData(layer)
+
+		if (altLayers[layer].tabFormat && !Array.isArray(altLayers[layer].tabFormat)) {
+			playerdata.subtabs[layer] = {}
+			playerdata.subtabs[layer].mainTabs = Object.keys(altLayers[layer].tabFormat)[0]
+		}
+		if (altLayers[layer].microtabs) {
+			if (playerdata.subtabs[layer] == undefined) playerdata.subtabs[layer] = {}
+			for (item in altLayers[layer].microtabs)
+			playerdata.subtabs[layer][item] = Object.keys(altLayers[layer].microtabs[item])[0]
+		}
+		if (altLayers[layer].infoboxes) {
+			if (playerdata.infoboxes[layer] == undefined) playerdata.infoboxes[layer] = {}
+			for (item in altLayers[layer].infoboxes)
+				playerdata.infoboxes[layer][item] = false
+		}
+	
+	}
 	return playerdata
 }
 
 function getStartLayerData(layer){
 	layerdata = {}
-	if (layers[layer].startData) 
-		layerdata = layers[layer].startData()
+	if (layers[layer]) {
+		if (layers[layer].startData) 
+			layerdata = layers[layer].startData()
+
+		layerdata.buyables = getStartBuyables(layer)
+		if(layerdata.clickables == undefined) layerdata.clickables = getStartClickables(layer)
+		layerdata.spentOnBuyables = new Decimal(0)
+		layerdata.upgrades = []
+		layerdata.milestones = []
+		layerdata.achievements = []
+		layerdata.challenges = getStartChallenges(layer)
+	} else {
+		if (altLayers[layer].startData) 
+			layerdata = altLayers[layer].startData()
+	}
 
 	if (layerdata.unlocked === undefined) layerdata.unlocked = true
+	if (layerdata.bought === undefined) layerdata.bought = false
 	if (layerdata.total === undefined) layerdata.total = new Decimal(0)
 	if (layerdata.best === undefined) layerdata.best = new Decimal(0)
 
-	layerdata.buyables = getStartBuyables(layer)
-	if(layerdata.clickables == undefined) layerdata.clickables = getStartClickables(layer)
-	layerdata.spentOnBuyables = new Decimal(0)
-	layerdata.upgrades = []
-	layerdata.milestones = []
-	layerdata.achievements = []
-	layerdata.challenges = getStartChallenges(layer)
 	return layerdata
 }
-
 
 function getStartBuyables(layer){
 	let data = {}
@@ -256,6 +281,7 @@ function load() {
 	changeTheme();
 	changeTreeQuality();
 	updateLayers()
+	updateAltLayers()
 	setupModInfo()
 
 	setupTemp();
@@ -468,6 +494,10 @@ function canAffordUpgrade(layer, id) {
 
 function hasUpgrade(layer, id){
 	return (player[layer].upgrades.includes(toNumber(id)) || player[layer].upgrades.includes(id.toString()))
+}
+
+function hasSkill(skill) {
+
 }
 
 function hasMilestone(layer, id){

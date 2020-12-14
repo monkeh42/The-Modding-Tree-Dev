@@ -23,6 +23,7 @@ function setupTemp() {
 	tmp.displayThings = []
 
 	setupTempData(layers, tmp)
+	setupTempData(altLayers, tmp)
 	for (layer in layers){
 		tmp[layer].resetGain = {}
 		tmp[layer].nextAt = {}
@@ -68,6 +69,7 @@ function updateTemp() {
 		setupTemp()
 
 	updateTempData(layers, tmp)
+	updateTempData(altLayers, tmp)
 
 	for (layer in layers){
 		tmp[layer].resetGain = getResetGain(layer)

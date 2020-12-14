@@ -1,4 +1,5 @@
 var layers = {}
+var altLayers = {}
 
 const decimalZero = new Decimal(0)
 const decimalOne = new Decimal(1)
@@ -9,6 +10,7 @@ function layerShown(layer){
 }
 
 var LAYERS = Object.keys(layers);
+var ALTLAYERS = Object.keys(altLayers);
 
 var hotkeys = {};
 
@@ -34,6 +36,10 @@ function updateHotkeys()
 var ROW_LAYERS = {}
 var TREE_LAYERS = {}
 var OTHER_LAYERS = {}
+
+var ALT_ROW_LAYERS = {}
+var ALT_TREE_LAYERS = {}
+var ALT_OTHER_LAYERS = {}
 
 function updateLayers(){
     LAYERS = Object.keys(layers);
@@ -191,6 +197,162 @@ function setupLayer(layer){
     
 }
 
+function updateAltLayers(){
+    ALTLAYERS = Object.keys(altLayers);
+    ALT_ROW_LAYERS = {}
+    ALT_TREE_LAYERS = {}
+    ALT_OTHER_LAYERS = {}
+    for (layer in altLayers){
+        setupAltLayer(layer)
+    }
+    for (row in ALT_OTHER_LAYERS) {
+        ALT_OTHER_LAYERS[row].sort((a, b) => (a.position > b.position) ? 1 : -1)
+        for (layer in ALT_OTHER_LAYERS[row])
+            ALT_OTHER_LAYERS[row][layer] = ALT_OTHER_LAYERS[row][layer].layer 
+    }
+    for (row in ALT_TREE_LAYERS) {
+        ALT_TREE_LAYERS[row].sort((a, b) => (a.position > b.position) ? 1 : -1)
+            for (layer in ALT_TREE_LAYERS[row])
+            ALT_TREE_LAYERS[row][layer] = ALT_TREE_LAYERS[row][layer].layer
+    }
+    let treeLayers2 = []
+    for (x = 0; x < maxRow + 1; x++) {
+        if (ALT_TREE_LAYERS[x]) treeLayers2.push(ALT_TREE_LAYERS[x])
+    }
+    ALT_TREE_LAYERS = treeLayers2
+    updateHotkeys()
+}
+
+function setupAltLayer(layer){
+    altLayers[layer].layer = layer
+    if (altLayers[layer].upgrades){
+        for (thing in altLayers[layer].upgrades){
+            if (!isNaN(thing)){
+                altLayers[layer].upgrades[thing].id = thing
+                altLayers[layer].upgrades[thing].layer = layer
+                if (altLayers[layer].upgrades[thing].unlocked === undefined)
+                    altLayers[layer].upgrades[thing].unlocked = true
+            }
+        }
+    }
+    if (altLayers[layer].milestones){
+        for (thing in altLayers[layer].milestones){
+            if (!isNaN(thing)){
+                altLayers[layer].milestones[thing].id = thing
+                altLayers[layer].milestones[thing].layer = layer
+                if (altLayers[layer].milestones[thing].unlocked === undefined)
+                    altLayers[layer].milestones[thing].unlocked = true
+            }
+        }
+    }
+    if (altLayers[layer].achievements){
+        for (thing in altLayers[layer].achievements){
+            if (!isNaN(thing)){
+                altLayers[layer].achievements[thing].id = thing
+                altLayers[layer].achievements[thing].layer = layer
+                if (altLayers[layer].achievements[thing].unlocked === undefined)
+                    altLayers[layer].achievements[thing].unlocked = true
+            }
+        }
+    }
+    if (altLayers[layer].challenges){
+        for (thing in altLayers[layer].challenges){
+            if (!isNaN(thing)){
+                altLayers[layer].challenges[thing].id = thing
+                altLayers[layer].challenges[thing].layer = layer
+                if (altLayers[layer].challenges[thing].unlocked === undefined)
+                    altLayers[layer].challenges[thing].unlocked = true
+                if (altLayers[layer].challenges[thing].completionLimit === undefined)
+                    altLayers[layer].challenges[thing].completionLimit = 1
+
+            }
+        }
+    }
+    if (altLayers[layer].buyables){
+        altLayers[layer].buyables.layer = layer
+        for (thing in altLayers[layer].buyables){
+            if (!isNaN(thing)){
+                altLayers[layer].buyables[thing].id = thing
+                altLayers[layer].buyables[thing].layer = layer
+                if (altLayers[layer].buyables[thing].unlocked === undefined)
+                    altLayers[layer].buyables[thing].unlocked = true
+            }
+        }  
+    }
+
+    if (altLayers[layer].clickables){
+        altLayers[layer].clickables.layer = layer
+        for (thing in altLayers[layer].clickables){
+            if (!isNaN(thing)){
+                altLayers[layer].clickables[thing].id = thing
+                altLayers[layer].clickables[thing].layer = layer
+                if (altLayers[layer].clickables[thing].unlocked === undefined)
+                    altLayers[layer].clickables[thing].unlocked = true
+            }
+        }  
+    }
+
+    if (altLayers[layer].bars){
+        altLayers[layer].bars.layer = layer
+        for (thing in altLayers[layer].bars){
+            altLayers[layer].bars[thing].id = thing
+            altLayers[layer].bars[thing].layer = layer
+            if (altLayers[layer].bars[thing].unlocked === undefined)
+                altLayers[layer].bars[thing].unlocked = true
+        }  
+    }
+
+    if (altLayers[layer].infoboxes){
+        for (thing in altLayers[layer].infoboxes){
+            altLayers[layer].infoboxes[thing].id = thing
+            altLayers[layer].infoboxes[thing].layer = layer
+            if (altLayers[layer].infoboxes[thing].unlocked === undefined)
+                altLayers[layer].infoboxes[thing].unlocked = true
+        }  
+    }
+    
+    if (altLayers[layer].startData) {
+        data = altLayers[layer].startData()
+        if (data.best !== undefined && data.showBest === undefined) altLayers[layer].showBest = true
+        if (data.total !== undefined && data.showTotal === undefined) altLayers[layer].showTotal = true
+    }
+
+    if(!altLayers[layer].componentStyles) altLayers[layer].componentStyles = {}
+    if(altLayers[layer].symbol === undefined) altLayers[layer].symbol = layer.charAt(0).toUpperCase() + layer.slice(1)
+    if(altLayers[layer].unlockOrder === undefined) altLayers[layer].unlockOrder = new Decimal(0)
+    if(altLayers[layer].gainMult === undefined) altLayers[layer].gainMult = new Decimal(1)
+    if(altLayers[layer].gainExp === undefined) altLayers[layer].gainExp = new Decimal(1)
+    if(altLayers[layer].type === undefined) altLayers[layer].type = "none"
+    if(altLayers[layer].base === undefined || altLayers[layer].base <= 1) altLayers[layer].base = 2
+    if(altLayers[layer].altBase === undefined || altLayers[layer].altBase <= 1) altLayers[layer].altBase = 2
+    if(altLayers[layer].altExp === undefined) altLayers[layer].altExp = 0.5
+    if(altLayers[layer].softcap === undefined) altLayers[layer].softcap = new Decimal("e1e7")
+    if(altLayers[layer].softcapPower === undefined) altLayers[layer].softcapPower = new Decimal("0.5")
+    if(altLayers[layer].displayRow === undefined) altLayers[layer].displayRow = altLayers[layer].row
+    if(altLayers[layer].altRequires === undefined) altLayers[layer].altRequires = 0
+    if(altLayers[layer].altResource === undefined) altLayers[layer].altResource = "none"
+    if(altLayers[layer].altBaseAmount === undefined) altLayers[layer].altBaseAmount = 0
+    if(altLayers[layer].name === undefined) altLayers[layer].name = layer
+    if(altLayers[layer].layerShown === undefined) altLayers[layer].layerShown = true
+
+    let row = altLayers[layer].row
+
+    let displayRow = altLayers[layer].displayRow
+
+    if(!ALT_ROW_LAYERS[row]) ALT_ROW_LAYERS[row] = {}
+    if(!ALT_TREE_LAYERS[displayRow] && !isNaN(displayRow)) ALT_TREE_LAYERS[displayRow] = []
+    if(!ALT_OTHER_LAYERS[displayRow] && isNaN(displayRow)) ALT_OTHER_LAYERS[displayRow] = []
+
+    ALT_ROW_LAYERS[row][layer]=layer;
+    let position = (altLayers[layer].position !== undefined ? altLayers[layer].position : layer)
+    
+    if (!isNaN(displayRow)) ALT_TREE_LAYERS[displayRow].push({layer: layer, position: position})
+    else ALT_OTHER_LAYERS[displayRow].push({layer: layer, position: position})
+
+    if (maxRow < altLayers[layer].displayRow) maxRow = altLayers[layer].displayRow
+    
+}
+
 
 function addLayer(layerName, layerData, tabLayers = null){ // Call this to add layers from a different file!
     layers[layerName] = layerData
@@ -220,6 +382,11 @@ function addLayer(layerName, layerData, tabLayers = null){ // Call this to add l
 function addNode(layerName, layerData){ // Does the same thing, but for non-layer nodes
     layers[layerName] = layerData
     layers[layerName].isLayer = false
+}
+
+function addAltNode(layerName, layerData){
+    altLayers[layerName] = layerData
+    altLayers[layerName].isLayer = false
 }
 
 // If data is a function, return the result of calling it. Otherwise, return the data.

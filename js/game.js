@@ -154,7 +154,8 @@ function layerDataReset(layer, keep = []) {
 			storedData[keep[thing]] = player[layer][keep[thing]]
 	}
 
-	layOver(player[layer], getStartLayerData(layer))
+	if (layers[layer]) { layOver(player[layer], getStartLayerData(layer)) }
+	else { layOver(player[layer], getStartAltLayerData(layer)) }
 	player[layer].upgrades = []
 	player[layer].milestones = []
 	player[layer].challenges = getStartChallenges(layer)
