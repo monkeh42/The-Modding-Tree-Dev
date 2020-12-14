@@ -606,6 +606,7 @@ addLayer("p", {
         "Skills": {
             content: [
                 "main-display",
+                "blank",
                 ["display-text",
                     function() {return 'You have  '+formatWhole(player.p.total.minus(player.p.spent))+" experience points to spend" + "<br>You have spent "+formatWhole(player.p.spent)+" experience points"}, {}],
                 ["tree", function() {return ALT_TREE_LAYERS }],
