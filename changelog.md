@@ -1,13 +1,41 @@
 # The Modding Tree changelog:
 
-### v2.2.8 12/03/20
+## v2.3.3 - 12/13/20
+- Fixed the first node in a row always taking up space.
+- layerShown is now optional.
+- All prestige types can now use features for custom prestige types.
+
+## v2.3.2 - 12/13/20
+- Fixed achievement/milestone popups.
+
+## v2.3.1 - 12/12/20
+- Another attempt to fix flickering tooltips.
+- The "this" keyword should work everywhere except tabFormat arrays (although I may have missed some things).
+- Fixed tree branches not updating when scrolling on the right-side tab.
+- Fixed a spacing issue when a node's symbol is ""
+- Removed some old, unneeded files.
+
+## v2.3: Cooler and Newer Edition - 12/10/20
+- Added achievement/milestone popups (thank you to Jacorb for this contribution!)
+- The changelog tab is back, and can be set in mod.js.
+- Layer nodes and respec buttons will not be clicked by pressing "enter".
+- Possible fix for flickering tooltips and strange transitions.
+- The victory screen text is configurable.
+- Added image and textStyle features to achievements.
+- Added an argument to use specific rows in an "upgrades" component.
+- Fixed the comma appearing in the main display when there was no effectDescription
+- Added the ability to easily make a tab that is a collection of layers in subtabs.
+- Improved spacing for embedding layers with subtabs into subtabs.
+
+
+### v2.2.8 - 12/03/20
 - Double-clicking a layer node brings you to the main subtab for that layer.
 - Attempted to fix challenges visually updating a different way.
 - Added a softcap function for use in formulas.
 - Added displayRow feature, which lets layers be shown somewhere separate from where they are in the reset order (e.g. side layers)
 - Fixed autoupgrade issue.
 
-### v2.2.7 11/30/20
+### v2.2.7 - 11/30/20
 - Added autoUpgrade feature.
 - resource-display now shows resource gain per second if passiveGain is active.
 - Fixed formatting issues on some large numbers.
@@ -15,13 +43,13 @@
 - Made hard resetting more effective.
 - Removed Herobrine from getStartClickables.
 
-### v2.2.6 11/30/20
+### v2.2.6 - 11/30/20
 - Added goalDescription for challenges and made the new "canComplete" system the standard.
 - Another attempt to fix challenges not visually updating.
 - Fixed side layers not appearing.
 - Fixed getStartClickables again.
 
-### v2.2.5 11/29/20
+### v2.2.5 - 11/29/20
 - Added features for overriding the displays and costs/goals of upgrades and challenges to make them fully custom.
 - best, total, and unlocked are always automatically added to layerData (but best and total will only display if you add them yourself).
 - Fixed getStartClickables.

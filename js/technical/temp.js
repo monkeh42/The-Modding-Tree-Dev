@@ -79,6 +79,7 @@ function updateTemp() {
 		tmp[layer].prestigeNotify = prestigeNotify(layer)
 		tmp[layer].prestigeButtonText = prestigeButtonText(layer)
 		constructBarStyles(layer)
+		constructAchievementStyles(layer)
 		updateChallengeDisplay(layer)
 
 	}
@@ -131,7 +132,6 @@ function updateChallengeTemp(layer)
 function updateChallengeDisplay(layer) {
 	for (id in player[layer].challenges) {
 		let style = "locked"
-		console.log(layer + " " + id)
 		if (player[layer].activeChallenge == id && canCompleteChallenge(layer, id)) style = "canComplete"
 		else if (hasChallenge(layer, id)) style = "done"
 		tmp[layer].challenges[id].defaultStyle = style
@@ -151,8 +151,20 @@ function updateClickableTemp(layer)
 	updateTempData(layers[layer].clickables, tmp[layer].clickables)
 }
 
-
-var DIR_MARGINS = ["margin-bottom", "margin-top", "margin-right", "margin-left"]
+function constructAchievementStyles(layer){
+	for (id in tmp[layer].achievements) {
+		ach = tmp[layer].achievements[id]
+		if (isPlainObject(ach)) {
+			let style = []
+			if (ach.image){ 
+				style.push({'background-image': 'url("' + ach.image + '")'})
+			} 
+			if (!ach.unlocked) style.push({'visibility': 'hidden'})
+			style.push(ach.style)
+			Vue.set(ach, 'computedStyle', style)
+		}
+	}
+}
 
 function constructBarStyles(layer){
 	if (layers[layer].bars === undefined)
@@ -195,7 +207,6 @@ function setupBarStyles(layer){
 	for (id in layers[layer].bars){
 		let bar = tmp[layer].bars[id]
 		bar.dims = {}
-		let dir = bar.direction
 		bar.fillDims = {}
 	}
 }

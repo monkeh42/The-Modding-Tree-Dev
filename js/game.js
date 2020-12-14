@@ -4,13 +4,17 @@ var gameEnded = false;
 
 // Don't change this
 const TMT_VERSION = {
-	tmtNum: "2.2.8",
-	tmtName: "Uprooted"
+	tmtNum: "2.3.3",
+	tmtName: "Cooler and Newer Edition"
 }
 
 function getResetGain(layer, useType = null) {
 	let type = useType
-	if (!useType) type = tmp[layer].type
+	if (!useType){ 
+		type = tmp[layer].type
+		if (layers[layer].getResetGain !== undefined)
+			return layers[layer].getResetGain()
+	} 
 	if(tmp[layer].type == "none")
 		return new Decimal (0)
 	if (tmp[layer].gainExp.eq(0)) return new Decimal(0)
@@ -32,7 +36,12 @@ function getResetGain(layer, useType = null) {
 
 function getNextAt(layer, canMax=false, useType = null) {
 	let type = useType
-	if (!useType) type = tmp[layer].type
+	if (!useType) {
+		type = tmp[layer].type
+		if (layers[layer].getNextAt !== undefined)
+			return layers[layer].getNextAt(canMax)
+
+		}
 	if(tmp[layer].type == "none")
 		return new Decimal (Infinity)
 
@@ -112,8 +121,10 @@ function shouldNotify(layer){
 }
 
 function canReset(layer)
-{
-	if(tmp[layer].type == "normal")
+{	
+	if (layers[layer].canReset!== undefined)
+		return run(layers[layer].canReset, layers[layer])
+	else if(tmp[layer].type == "normal")
 		return tmp[layer].baseAmount.gte(tmp[layer].requires)
 	else if(tmp[layer].type== "static")
 		return tmp[layer].baseAmount.gte(tmp[layer].nextAt)
@@ -128,7 +139,7 @@ function rowReset(row, layer) {
 		if(layers[lr].doReset) {
 
 			player[lr].activeChallenge = null // Exit challenges on any row reset on an equal or higher row
-			layers[lr].doReset(layer)
+			run(layers[lr].doReset, layers[lr], layer)
 		}
 		else
 			if(tmp[layer].row > tmp[lr].row && row !== "side" && !isNaN(row)) layerDataReset(lr)
@@ -190,7 +201,7 @@ function doReset(layer, force=false) {
 		} 
 
 		if (layers[layer].onPrestige)
-			layers[layer].onPrestige(gain)
+			run(layers[layer].onPrestige, layers[layer], gain)
 		
 		addPoints(layer, gain)
 		updateMilestones(layer)
@@ -272,7 +283,7 @@ function canCompleteChallenge(layer, x)
 		}
 		else if (challenge.currencyLayer){
 			let lr = challenge.currencyLayer
-			return !(player[lr][name].lt(readData(challenge.goal))) 
+			return !(player[lr][name].lt(challenge.goal)) 
 		}
 		else {
 			return !(player[name].lt(challenge.goal))
@@ -294,7 +305,7 @@ function completeChallenge(layer, x) {
 	if (player[layer].challenges[x] < tmp[layer].challenges[x].completionLimit) {
 		needCanvasUpdate = true
 		player[layer].challenges[x] += 1
-		if (layers[layer].challenges[x].onComplete) layers[layer].challenges[x].onComplete()
+		if (layers[layer].challenges[x].onComplete) run(layers[layer].challenges[x].onComplete, layers[layer].challenges[x])
 	}
 	player[layer].activeChallenge = null
 	updateChallengeTemp(layer)
@@ -403,6 +414,7 @@ var interval = setInterval(function() {
 	updateTemp();
 	gameLoop(diff)
 	fixNaNs()
+	adjustPopupTime(diff) 
 	ticking = false
 }, 50)
 

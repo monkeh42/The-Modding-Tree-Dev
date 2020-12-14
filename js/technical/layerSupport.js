@@ -5,7 +5,7 @@ const decimalOne = new Decimal(1)
 const decimalNaN = new Decimal(NaN)
 
 function layerShown(layer){
-    return layers[layer].layerShown();
+    return tmp[layer].layerShown;
 }
 
 var LAYERS = Object.keys(layers);
@@ -41,131 +41,7 @@ function updateLayers(){
     TREE_LAYERS = {}
     OTHER_LAYERS = {}
     for (layer in layers){
-        layers[layer].layer = layer
-        if (layers[layer].upgrades){
-            for (thing in layers[layer].upgrades){
-                if (!isNaN(thing)){
-                    layers[layer].upgrades[thing].id = thing
-                    layers[layer].upgrades[thing].layer = layer
-                    if (layers[layer].upgrades[thing].unlocked === undefined)
-                        layers[layer].upgrades[thing].unlocked = true
-                }
-            }
-        }
-        if (layers[layer].milestones){
-            for (thing in layers[layer].milestones){
-                if (!isNaN(thing)){
-                    layers[layer].milestones[thing].id = thing
-                    layers[layer].milestones[thing].layer = layer
-                    if (layers[layer].milestones[thing].unlocked === undefined)
-                        layers[layer].milestones[thing].unlocked = true
-                }
-            }
-        }
-        if (layers[layer].achievements){
-            for (thing in layers[layer].achievements){
-                if (!isNaN(thing)){
-                    layers[layer].achievements[thing].id = thing
-                    layers[layer].achievements[thing].layer = layer
-                    if (layers[layer].achievements[thing].unlocked === undefined)
-                        layers[layer].achievements[thing].unlocked = true
-                }
-            }
-        }
-        if (layers[layer].challenges){
-            for (thing in layers[layer].challenges){
-                if (!isNaN(thing)){
-                    layers[layer].challenges[thing].id = thing
-                    layers[layer].challenges[thing].layer = layer
-                    if (layers[layer].challenges[thing].unlocked === undefined)
-                        layers[layer].challenges[thing].unlocked = true
-                    if (layers[layer].challenges[thing].completionLimit === undefined)
-                        layers[layer].challenges[thing].completionLimit = 1
-
-                }
-            }
-        }
-        if (layers[layer].buyables){
-            layers[layer].buyables.layer = layer
-            for (thing in layers[layer].buyables){
-                if (!isNaN(thing)){
-                    layers[layer].buyables[thing].id = thing
-                    layers[layer].buyables[thing].layer = layer
-                    if (layers[layer].buyables[thing].unlocked === undefined)
-                        layers[layer].buyables[thing].unlocked = true
-                }
-            }  
-        }
-
-        if (layers[layer].clickables){
-            layers[layer].clickables.layer = layer
-            for (thing in layers[layer].clickables){
-                if (!isNaN(thing)){
-                    layers[layer].clickables[thing].id = thing
-                    layers[layer].clickables[thing].layer = layer
-                    if (layers[layer].clickables[thing].unlocked === undefined)
-                        layers[layer].clickables[thing].unlocked = true
-                }
-            }  
-        }
-
-        if (layers[layer].bars){
-            layers[layer].bars.layer = layer
-            for (thing in layers[layer].bars){
-                layers[layer].bars[thing].id = thing
-                layers[layer].bars[thing].layer = layer
-                if (layers[layer].bars[thing].unlocked === undefined)
-                    layers[layer].bars[thing].unlocked = true
-            }  
-        }
-
-        if (layers[layer].infoboxes){
-            for (thing in layers[layer].infoboxes){
-                layers[layer].infoboxes[thing].id = thing
-                layers[layer].infoboxes[thing].layer = layer
-                if (layers[layer].infoboxes[thing].unlocked === undefined)
-                    layers[layer].infoboxes[thing].unlocked = true
-            }  
-        }
-        
-        if (layers[layer].startData) {
-            data = layers[layer].startData()
-            if (data.best !== undefined && data.showBest === undefined) layers[layer].showBest = true
-            if (data.total !== undefined && data.showTotal === undefined) layers[layer].showTotal = true
-        }
-
-        if(!layers[layer].componentStyles) layers[layer].componentStyles = {}
-        if(layers[layer].symbol === undefined) layers[layer].symbol = layer.charAt(0).toUpperCase() + layer.slice(1)
-        if(layers[layer].unlockOrder === undefined) layers[layer].unlockOrder = new Decimal(0)
-        if(layers[layer].gainMult === undefined) layers[layer].gainMult = new Decimal(1)
-        if(layers[layer].gainExp === undefined) layers[layer].gainExp = new Decimal(1)
-        if(layers[layer].type === undefined) layers[layer].type = "none"
-        if(layers[layer].base === undefined || layers[layer].base <= 1) layers[layer].base = 2
-        if(layers[layer].altBase === undefined || layers[layer].altBase <= 1) layers[layer].altBase = 2
-        if(layers[layer].altExp === undefined) layers[layer].altExp = 0.5
-        if(layers[layer].softcap === undefined) layers[layer].softcap = new Decimal("e1e7")
-        if(layers[layer].softcapPower === undefined) layers[layer].softcapPower = new Decimal("0.5")
-        if(layers[layer].displayRow === undefined) layers[layer].displayRow = layers[layer].row
-        if(layers[layer].altRequires === undefined) layers[layer].altRequires = 0
-        if(layers[layer].altResource === undefined) layers[layer].altResource = "none"
-        if(layers[layer].altBaseAmount === undefined) layers[layer].altBaseAmount = 0
-
-        let row = layers[layer].row
-
-        let displayRow = layers[layer].displayRow
-
-        if(!ROW_LAYERS[row]) ROW_LAYERS[row] = {}
-        if(!TREE_LAYERS[displayRow] && !isNaN(displayRow)) TREE_LAYERS[displayRow] = []
-        if(!OTHER_LAYERS[displayRow] && isNaN(displayRow)) OTHER_LAYERS[displayRow] = []
-
-        ROW_LAYERS[row][layer]=layer;
-        let position = (layers[layer].position !== undefined ? layers[layer].position : layer)
-        
-        if (!isNaN(displayRow)) TREE_LAYERS[displayRow].push({layer: layer, position: position})
-        else OTHER_LAYERS[displayRow].push({layer: layer, position: position})
-
-        if (maxRow < layers[layer].displayRow) maxRow = layers[layer].displayRow
-        
+        setupLayer(layer)
     }
     for (row in OTHER_LAYERS) {
         OTHER_LAYERS[row].sort((a, b) => (a.position > b.position) ? 1 : -1)
@@ -185,9 +61,160 @@ function updateLayers(){
     updateHotkeys()
 }
 
-function addLayer(layerName, layerData){ // Call this to add layers from a different file!
+function setupLayer(layer){
+    layers[layer].layer = layer
+    if (layers[layer].upgrades){
+        for (thing in layers[layer].upgrades){
+            if (!isNaN(thing)){
+                layers[layer].upgrades[thing].id = thing
+                layers[layer].upgrades[thing].layer = layer
+                if (layers[layer].upgrades[thing].unlocked === undefined)
+                    layers[layer].upgrades[thing].unlocked = true
+            }
+        }
+    }
+    if (layers[layer].milestones){
+        for (thing in layers[layer].milestones){
+            if (!isNaN(thing)){
+                layers[layer].milestones[thing].id = thing
+                layers[layer].milestones[thing].layer = layer
+                if (layers[layer].milestones[thing].unlocked === undefined)
+                    layers[layer].milestones[thing].unlocked = true
+            }
+        }
+    }
+    if (layers[layer].achievements){
+        for (thing in layers[layer].achievements){
+            if (!isNaN(thing)){
+                layers[layer].achievements[thing].id = thing
+                layers[layer].achievements[thing].layer = layer
+                if (layers[layer].achievements[thing].unlocked === undefined)
+                    layers[layer].achievements[thing].unlocked = true
+            }
+        }
+    }
+    if (layers[layer].challenges){
+        for (thing in layers[layer].challenges){
+            if (!isNaN(thing)){
+                layers[layer].challenges[thing].id = thing
+                layers[layer].challenges[thing].layer = layer
+                if (layers[layer].challenges[thing].unlocked === undefined)
+                    layers[layer].challenges[thing].unlocked = true
+                if (layers[layer].challenges[thing].completionLimit === undefined)
+                    layers[layer].challenges[thing].completionLimit = 1
+
+            }
+        }
+    }
+    if (layers[layer].buyables){
+        layers[layer].buyables.layer = layer
+        for (thing in layers[layer].buyables){
+            if (!isNaN(thing)){
+                layers[layer].buyables[thing].id = thing
+                layers[layer].buyables[thing].layer = layer
+                if (layers[layer].buyables[thing].unlocked === undefined)
+                    layers[layer].buyables[thing].unlocked = true
+            }
+        }  
+    }
+
+    if (layers[layer].clickables){
+        layers[layer].clickables.layer = layer
+        for (thing in layers[layer].clickables){
+            if (!isNaN(thing)){
+                layers[layer].clickables[thing].id = thing
+                layers[layer].clickables[thing].layer = layer
+                if (layers[layer].clickables[thing].unlocked === undefined)
+                    layers[layer].clickables[thing].unlocked = true
+            }
+        }  
+    }
+
+    if (layers[layer].bars){
+        layers[layer].bars.layer = layer
+        for (thing in layers[layer].bars){
+            layers[layer].bars[thing].id = thing
+            layers[layer].bars[thing].layer = layer
+            if (layers[layer].bars[thing].unlocked === undefined)
+                layers[layer].bars[thing].unlocked = true
+        }  
+    }
+
+    if (layers[layer].infoboxes){
+        for (thing in layers[layer].infoboxes){
+            layers[layer].infoboxes[thing].id = thing
+            layers[layer].infoboxes[thing].layer = layer
+            if (layers[layer].infoboxes[thing].unlocked === undefined)
+                layers[layer].infoboxes[thing].unlocked = true
+        }  
+    }
+    
+    if (layers[layer].startData) {
+        data = layers[layer].startData()
+        if (data.best !== undefined && data.showBest === undefined) layers[layer].showBest = true
+        if (data.total !== undefined && data.showTotal === undefined) layers[layer].showTotal = true
+    }
+
+    if(!layers[layer].componentStyles) layers[layer].componentStyles = {}
+    if(layers[layer].symbol === undefined) layers[layer].symbol = layer.charAt(0).toUpperCase() + layer.slice(1)
+    if(layers[layer].unlockOrder === undefined) layers[layer].unlockOrder = new Decimal(0)
+    if(layers[layer].gainMult === undefined) layers[layer].gainMult = new Decimal(1)
+    if(layers[layer].gainExp === undefined) layers[layer].gainExp = new Decimal(1)
+    if(layers[layer].type === undefined) layers[layer].type = "none"
+    if(layers[layer].base === undefined || layers[layer].base <= 1) layers[layer].base = 2
+    if(layers[layer].altBase === undefined || layers[layer].altBase <= 1) layers[layer].altBase = 2
+    if(layers[layer].altExp === undefined) layers[layer].altExp = 0.5
+    if(layers[layer].softcap === undefined) layers[layer].softcap = new Decimal("e1e7")
+    if(layers[layer].softcapPower === undefined) layers[layer].softcapPower = new Decimal("0.5")
+    if(layers[layer].displayRow === undefined) layers[layer].displayRow = layers[layer].row
+    if(layers[layer].altRequires === undefined) layers[layer].altRequires = 0
+    if(layers[layer].altResource === undefined) layers[layer].altResource = "none"
+    if(layers[layer].altBaseAmount === undefined) layers[layer].altBaseAmount = 0
+    if(layers[layer].name === undefined) layers[layer].name = layer
+    if(layers[layer].layerShown === undefined) layers[layer].layerShown = true
+
+    let row = layers[layer].row
+
+    let displayRow = layers[layer].displayRow
+
+    if(!ROW_LAYERS[row]) ROW_LAYERS[row] = {}
+    if(!TREE_LAYERS[displayRow] && !isNaN(displayRow)) TREE_LAYERS[displayRow] = []
+    if(!OTHER_LAYERS[displayRow] && isNaN(displayRow)) OTHER_LAYERS[displayRow] = []
+
+    ROW_LAYERS[row][layer]=layer;
+    let position = (layers[layer].position !== undefined ? layers[layer].position : layer)
+    
+    if (!isNaN(displayRow)) TREE_LAYERS[displayRow].push({layer: layer, position: position})
+    else OTHER_LAYERS[displayRow].push({layer: layer, position: position})
+
+    if (maxRow < layers[layer].displayRow) maxRow = layers[layer].displayRow
+    
+}
+
+
+function addLayer(layerName, layerData, tabLayers = null){ // Call this to add layers from a different file!
     layers[layerName] = layerData
     layers[layerName].isLayer = true
+    if (tabLayers !== null)
+    {
+        let format = {}
+        for (id in tabLayers) {
+            layer = tabLayers[id]
+            format[(layers[layer].name ? layers[layer].name : layer)] = {
+                embedLayer: layer,
+                buttonStyle() {
+                    if (!tmp[this.embedLayer].nodeStyle) return {'border-color': tmp[this.embedLayer].color}
+                    else {
+                        style = tmp[this.embedLayer].nodeStyle
+                        if (style['border-color'] === undefined) style['border-color'] = tmp[this.embedLayer].color
+                        return style
+                    } 
+                },
+                unlocked() {return tmp[this.embedLayer].layerShown},
+            }       
+        }
+        layers[layerName].tabFormat = format
+    }
 }
 
 function addNode(layerName, layerData){ // Does the same thing, but for non-layer nodes
@@ -195,10 +222,9 @@ function addNode(layerName, layerData){ // Does the same thing, but for non-laye
     layers[layerName].isLayer = false
 }
 
-
 // If data is a function, return the result of calling it. Otherwise, return the data.
 function readData(data, args=null){
-	if (!!(data && data.constructor && data.call && data.apply))
+	if ((!!data && data.constructor && data.call && data.apply))
 		return data(args);
 	else
 		return data;
@@ -226,5 +252,10 @@ addLayer("info-tab", {
 
 addLayer("options-tab", {
     tabFormat: ["options-tab"],
+    row: "otherside"
+})
+
+addLayer("changelog-tab", {
+    tabFormat() {return ([["raw-html", modInfo.changelog]])},
     row: "otherside"
 })
