@@ -120,7 +120,7 @@ addLayer("z", {
             cost() { return tmp.z.upCostMult.times(100) },
             unlocked () { return hasUpgrade("z", 22) },
             effect() { 
-                let eff = Decimal.pow(1.5, player.z.upgrades.length).div(1.75)
+                let eff = Decimal.pow(1.5, player.z.upgrades.length).div(1.75).max(1)
                 return eff
             },
             effectDisplay() { return format(tmp.z.upgrades[23].effect)+"x" },
