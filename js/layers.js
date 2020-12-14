@@ -900,10 +900,12 @@ addAltNode("m", {
         return eff
     },
     layerShown() { return true },
-    canClick() { return (player.p.total.minus(player.p.spent)).gte(player.m.cost) && !player.m.bought },
+    canClick() { return (player.p.total.minus(player.p.spent).gte(player.m.cost) && !player.m.bought) },
     onClick() { 
-        player.p.spent = player.p.spent.plus(player.m.cost)
-        player.m.bought = true
+        if (player.p.total.minus(player.p.spent).gte(player.m.cost)) {
+            player.p.spent = player.p.spent.plus(player.m.cost)
+            player.m.bought = true
+        }
     },
     tooltip() { return "Master Necromancer:\nx" + formatWhole(this.effect()) + " to all previous prestige gains.\nCost: " + formatWhole(player.m.cost) + " experience points" },
     tooltipLocked() { return "Master Necromancer:\nx" + formatWhole(this.effect()) + " to all previous prestige gains.\nCost: " + formatWhole(player.m.cost) + " experience points" },
