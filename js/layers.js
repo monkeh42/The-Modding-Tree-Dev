@@ -979,7 +979,7 @@ addAltNode("r", {
     }}, 
     color: "#0D58C4",
     symbol: "R",
-    branches: ["q"],
+    branches: ["m"],
     row: 1,
     position: 2,
     effect() {
