@@ -290,7 +290,7 @@ addLayer("a", {
             cost() { return tmp.a.upCostMult.times(8) },
             unlocked() { return hasUpgrade("a", 13) },
             effect() {
-                eff = player.a.points.pow(4)
+                eff = player.a.points.pow(4).max(1)
                 return eff
             },
             effectDisplay() { return format(tmp.a.upgrades[14].effect)+"x" },
