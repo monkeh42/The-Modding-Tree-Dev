@@ -609,6 +609,7 @@ addLayer("p", {
                 "blank",
                 ["display-text",
                     function() {return 'You have  '+formatWhole(player.p.total.minus(player.p.spent))+" experience points to spend" + "<br>You have spent "+formatWhole(player.p.spent)+" experience points"}, {}],
+                "blank",
                 ["tree", function() {return ALT_TREE_LAYERS }],
             ],
             unlocked() { return player.p.total.gt(0) },
