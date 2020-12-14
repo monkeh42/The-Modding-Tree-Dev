@@ -301,7 +301,7 @@ addLayer("a", {
             cost() { return tmp.f.upCostMult.times(15) },
             unlocked() { return hasUpgrade("f", 14) },
             effect() {
-                eff = player.a.points.pow(2).times(1.5)
+                eff = player.a.points.pow(2).times(1.5).plus(1)
                 return eff
             },
             effectDisplay() { return format(tmp.a.upgrades[21].effect)+"x" },
@@ -516,7 +516,7 @@ addLayer("f", {
             cost() { return tmp.f.upCostMult.times(30) },
             unlocked() { return hasUpgrade("f", 21) },
             effect() {
-                let eff = player.f.power.pow(0.25).pow(0.5)
+                let eff = player.f.power.pow(0.25).pow(0.5).max(1)
                 return eff
             },
             effectDisplay() { return format(tmp.f.upgrades[22].effect)+"x" },
