@@ -20,7 +20,6 @@ function resizeCanvas() {
 	canvas.width  = window.innerWidth;
 	canvas.height = window.innerHeight;
 		drawTree();
-		drawAltTree();
 }
 
 var colors = {
@@ -48,11 +47,6 @@ function drawTree() {
 				}
 		}
 	}
-}
-
-function drawAltTree() {
-	if (!retrieveCanvasData()) return;
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	for (layer in altLayers){
 		if (tmp[layer].layerShown == true && tmp[layer].branches){
 			for (branch in tmp[layer].branches)
@@ -62,7 +56,6 @@ function drawAltTree() {
 		}
 	}
 }
-
 function drawTreeBranch(num1, data) { // taken from Antimatter Dimensions & adjusted slightly
 	let num2 = data
 	let color_id = 1
