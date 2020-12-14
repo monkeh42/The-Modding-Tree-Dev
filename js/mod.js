@@ -12,7 +12,7 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.1.0",
+	num: "0.1.2",
 	name: "Putrid Prepubescent",
 }
 
@@ -60,12 +60,12 @@ function addedPlayerData() { return {
 
 // Display extra things at the top of the page
 var displayThings = [
-	"Endgame: 2 planets"
+	"Endgame: 2 ascensions"
 ]
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.p.total.gte(new Decimal(2))
+	return player.p.resets.gte(new Decimal(2))
 }
 
 
