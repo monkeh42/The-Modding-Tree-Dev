@@ -13,8 +13,8 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.0.1",
-	name: "Nefarious Newborn",
+	num: "0.0.2",
+	name: "Tyrannical Toddler",
 }
 
 // If you add new functions anywhere inside of a layer, and those functions have an effect when called, add them here.
@@ -35,6 +35,7 @@ function getPointGen() {
 	if(!canGenPoints()) { return new Decimal(0) }
 
 	let gain = new Decimal(1)
+	if (hasUpgrade("f", 11) || hasUpgrade("a", 11)) { gain = gain.plus(1) }
 
 	if (player.a.unlocked) gain = gain.plus(tmp.a.effect)
 
@@ -42,6 +43,7 @@ function getPointGen() {
 	if (hasUpgrade("z", 12)) { gain = gain.times(upgradeEffect("z", 12)) }
 	if (hasUpgrade("z", 21)) { gain = gain.times(upgradeEffect("z", 21)) }
 	if (hasUpgrade("z", 23)) { gain = gain.times(upgradeEffect("z", 23)) }
+	if (hasUpgrade("a", 14)) { gain = gain.times(upgradeEffect("a", 14)) }
 
 	return gain
 }

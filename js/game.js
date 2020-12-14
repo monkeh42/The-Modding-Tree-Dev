@@ -203,7 +203,7 @@ function doReset(layer, force=false) {
 			if (tmp[layer].increaseUnlockOrder){
 				lrs = tmp[layer].increaseUnlockOrder
 				for (lr in lrs)
-					if (!player[lrs[lr]].unlocked) tmp[lrs[lr]].unlockOrder++
+					if (!player[lrs[lr]].unlocked) player[lrs[lr]].unlockOrder = player[lrs[lr]].unlockOrder.plus(1)
 			}
 		}
 	
@@ -237,7 +237,7 @@ function resetRow(row) {
 	doReset(pre_layers[0], true)
 	for (let layer in layers) {
 		player[layer].unlocked = false
-		if (player[layer].unlockOrder) player[layer].unlockOrder = 0
+		if (player[layer].unlockOrder) player[layer].unlockOrder = new Decimal(0)
 	}
 	player.points = getStartPoints()
 	updateTemp();
