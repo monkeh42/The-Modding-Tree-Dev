@@ -711,7 +711,7 @@ function inChallenge(layer, id){
 // ************ Misc ************
 
 function getExpPoints() {
-	if (player.p.total.gt(0)) { return player.p.total.minus(player.p.spent) } else { return 0 }
+	if (player.p.total.gt(0)) { return player.p.total.minus(player.p.spent) } else { return new Decimal(0) }
 }
 
 function getUnmetReqs(layer) {
