@@ -1032,7 +1032,7 @@ addLayer("n", {
         return `${tmp[this.layer].resetDescription}+<b>${formatWhole(tmp[this.layer].resetGain)}</b> ${tmp[this.layer].resource}<br><br>Next at: ${formatWhole(getNextAt("n", true, "static")) + " " + tmp[this.layer].baseResource} and ${formatWhole(tmp[this.layer].getResetGain.plus(1)) + " " + (tmp[this.layer].altBaseResource)}`
     },
     tooltipLocked() {
-        return `Reach ${format(tmp[this.layer].requires)} ${tmp[this.layer].baseResource} and 1 ${tmp[this.layer].altResource} to unlock (You have ${format(tmp[this.layer].baseAmount)} ${tmp[this.layer].baseResource})`
+        return `Reach ${format(tmp[this.layer].requires)} ${tmp[this.layer].baseResource} and 1 ${tmp[this.layer].altBaseResource} to unlock (You have ${format(tmp[this.layer].baseAmount)} ${tmp[this.layer].baseResource})`
     },
     onPrestige(gain) {
         player.p.points = player.p.points.minus(gain).max(0)
