@@ -833,6 +833,10 @@ function layerunlocked(layer) {
 	return (layers[layer] !== undefined) && (player[layer].unlocked || (tmp[layer].baseAmount.gte(tmp[layer].requires) && tmp[layer].layerShown))
 }
 
+function isAltLayer(layer) {
+	return (layers[layer] === undefined)
+}
+
 function keepGoing() {
 	player.keepGoing = true;
 	needCanvasUpdate = true;

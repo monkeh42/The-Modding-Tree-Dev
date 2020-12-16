@@ -1,6 +1,7 @@
 var player;
 var needCanvasUpdate = true;
 var gameEnded = false;
+//player.devSpeed 
 
 // Don't change this
 const TMT_VERSION = {

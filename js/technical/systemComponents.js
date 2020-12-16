@@ -18,7 +18,7 @@ var systemComponents = {
 			v-bind:id="layer"
 			v-on:click="function() {
 				if(tmp[layer].isLayer) {showTab(layer)}
-				else {run(altLayers[layer].onClick, altLayers[layer])}
+				else {isAltLayer(layer) ? run(altLayers[layer].onClick, altLayers[layer]) : run(layers[layer].onClick, layers[layer])}
 			}"
 
 			v-bind:tooltip="(tmp[layer].tooltip == '') ? false : (tmp[layer].isLayer) ? (
@@ -37,8 +37,8 @@ var systemComponents = {
 				[layer]: true,
 				ghost: tmp[layer].layerShown == 'ghost',
 				hidden: !tmp[layer].layerShown,
-				locked: tmp[layer].isLayer ? !(player[layer].unlocked || tmp[layer].canReset) : (!(tmp[layer].canClick) && !player[layer].bought),
-				bought: !tmp[layer].isLayer && player[layer].bought,
+				locked: tmp[layer].isLayer ? !(player[layer].unlocked || tmp[layer].canReset) : (!(tmp[layer].canClick) && !player[layer].bought && isAltLayer(layer)),
+				bought: !tmp[layer].isLayer && player[layer].bought && isAltLayer(layer),
 				notify: tmp[layer].notify,
 				resetNotify: tmp[layer].prestigeNotify,
 				can: ((player[layer].unlocked || tmp[layer].isLayer) && tmp[layer].isLayer) || (!tmp[layer].isLayer && tmp[layer].canClick),

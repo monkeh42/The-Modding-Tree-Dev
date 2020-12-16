@@ -91,7 +91,7 @@ addLayer("z", {
             cost() { return tmp.z.upCostMult.times(5) },
             unlocked() { return hasUpgrade("z", 12) },
             effect() { 
-                let eff = new Decimal(0.2)
+                let eff = new Decimal(0.1)
                 if (hasUpgrade("f", 23)) eff = eff.plus(0.1)
                 return eff
             },
@@ -156,7 +156,7 @@ addLayer("z", {
             cost() { return tmp.z.upCostMult.times(1000) },
             unlocked () { return hasUpgrade("z", 31) },
             effect() { 
-                let eff = player.a.points.plus(1).log10().div(10)
+                let eff = player.a.points.plus(1).log10().div(12)
                 return eff
             },
             effectDisplay() { return "+"+format(tmp.z.upgrades[33].effect)+" to gain exponent" },
@@ -182,8 +182,8 @@ addLayer("a", {
     branches: ["z"],
     color: "#C7002A",
     requires() { 
-        if(player.mn.bought) { return new Decimal(10).times((player.a.unlockOrder.neq(new Decimal(0)) && !player.a.unlocked)?5000:1).times(new Decimal(1).div(tmp["mn"].effect)) }
-        else { return new Decimal(10).times((player.a.unlockOrder.neq(new Decimal(0)) && !player.a.unlocked)?5000:1) }
+        if(player.mn.bought) { return new Decimal(10).times((player.a.unlockOrder.neq(0) && !player.a.unlocked)?100:1).times(new Decimal(1).div(tmp["mn"].effect)) }
+        else { return new Decimal(10).times((player.a.unlockOrder.neq(0) && !player.a.unlocked)?100:1) }
     },
     resource: "abominations", // Name of prestige currency
     baseResource: "zombies", // Name of resource prestige is based on
@@ -406,8 +406,8 @@ addLayer("f", {
     branches: ["z"],
     color: "#878787",
     requires() { 
-        if(player.mn.bought) { return new Decimal(200).times((player.f.unlockOrder.neq(new Decimal(0)) && !player.f.unlocked)?5000:1).times(new Decimal(1).div(tmp["mn"].effect)) }
-        else { return new Decimal(200).times((player.f.unlockOrder.neq(new Decimal(0)) && !player.f.unlocked)?5000:1) }
+        if(player.mn.bought) { return new Decimal(200).times((player.f.unlockOrder.neq(0) && !player.f.unlocked)?5000:1).times(new Decimal(1).div(tmp["mn"].effect)) }
+        else { return new Decimal(200).times((player.f.unlockOrder.neq(0) && !player.f.unlocked)?5000:1) }
     },
     resource: "death factories", // Name of prestige currency
     baseResource: "corpses", // Name of resource prestige is based on
@@ -430,7 +430,7 @@ addLayer("f", {
         return base
     },
     effect() {
-        eff = Decimal.pow(this.effBase(), player.f.points).sub(1).max(0)
+        eff = Decimal.pow(this.effBase(), player.f.points.max(1).log10().max(1)).sub(0.5)
         if(hasUpgrade("n", 12)) { eff = eff.times(player.n.points.pow(3)) }
         if (getBuyableAmount("s", 11).gt(0)) { eff = eff.times(buyableEffect("s", 11)) }
         return eff
@@ -438,14 +438,14 @@ addLayer("f", {
     limit() {
         lim = Decimal.pow(this.effBase().times(1.2), player.f.best)
         if (hasUpgrade("n", 11)) { lim = lim.times(upgradeEffect("n", 11)) }
-        return lim
+        return lim.max(25)
     },
     update(diff) {
-        if (player.f.unlocked && player.f.power.lt(this.limit())) player.f.power = player.f.power.plus(tmp.f.effect.times(diff))
+        if (player.f.unlocked && player.f.power.lt(tmp[this.layer].limit)) player.f.power = player.f.power.plus(tmp[this.layer].effect.times(diff)).max(tmp[this.layer].limit)
     },
     powerExp() {
-        exp = new Decimal(1)
-        if(hasUpgrade("f", 14)) exp = new Decimal(2)
+        exp = new Decimal(0.75)
+        if(hasUpgrade("f", 14)) exp = exp.times(2)
 
         return exp
     },
@@ -1519,3 +1519,43 @@ addAltNode("pp", {
         return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
     },
 }) 
+
+addNode( "plus", {
+    name: "addspeed",
+    symbol: "+",
+    startData() { return {                  // startData is a function that returns default data for a layer. 
+        unlocked: true,                     // You can add more variables here to add them to your layer.
+        points: new Decimal(1), 
+        bought: false,
+    }},  
+    layerShown() { return true },
+    notify: false,
+    prestigeNotify: false,
+    row: "side",
+    position: 0,
+    color: "#ffffff",
+    canClick() { return true },
+    onClick: function() { player["devSpeed"] += 1 },
+    tooltip() { return "+1 dev speed" },
+    tooltipLocked() { return "locked" },
+})
+
+addNode( "minus", {
+    name: "subspeed",
+    symbol: "-",
+    startData() { return {                  // startData is a function that returns default data for a layer. 
+        unlocked: true,                     // You can add more variables here to add them to your layer.
+        points: new Decimal(1),
+        bought: false,          
+    }}, 
+    layerShown() { return true },
+    notify: false,
+    prestigeNotify: false,
+    row: "side",
+    position: 1,
+    color: "#ffffff",
+    canClick() { return (player["devSpeed"] > 1) },
+    onClick: function() { player["devSpeed"] -= 1 },
+    tooltip() { return "-1 dev speed"},
+    tooltipLocked() { return "-1 dev speed\nalready at 0" },
+})
