@@ -66,7 +66,7 @@ function addedPlayerData() { return {
 
 // Display extra things at the top of the page
 var displayThings = [
-	"Endgame: 15 total exterminated planets"
+	"Current endgame: 15 total exterminated planets"
 ]
 
 // Determines when the game "ends"
