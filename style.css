@@ -145,7 +145,26 @@ h1, h2, h3, b, input {
 
 .bought {
 	background-color: #77bf5f;
+	color: #000000 !important;
 	cursor: default;
+}
+
+.click {
+	height: 120px;
+	width: 120px;
+	border-radius: 25%;
+	border: 2px solid;
+	border-color: rgba(0, 0, 0, 0.125);
+	font-size: 10px;
+}
+
+.clickableBought {
+	border: 2px solid white !important;
+}
+
+.clickableBought:hover {
+	transform: scale(1.15, 1.15);
+	box-shadow: 0 0 20px 20px #000000;
 }
 
 .back {
@@ -680,4 +699,14 @@ button > * {
 
 #treeTab td button {
     margin: 0 10px;
+}
+
+.customSubTab {
+	width: 100%;
+	margin: 0;
+}
+
+.customMilestones {
+	width: 50%;
+	margin: auto;
 }

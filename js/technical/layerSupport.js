@@ -168,14 +168,10 @@ function setupLayer(layer){
     if(layers[layer].gainExp === undefined) layers[layer].gainExp = new Decimal(1)
     if(layers[layer].type === undefined) layers[layer].type = "none"
     if(layers[layer].base === undefined || layers[layer].base <= 1) layers[layer].base = 2
-    if(layers[layer].altBase === undefined || layers[layer].altBase <= 1) layers[layer].altBase = 2
-    if(layers[layer].altExp === undefined) layers[layer].altExp = 0.5
-    if(layers[layer].softcap === undefined) layers[layer].softcap = new Decimal("e1e7")
-    if(layers[layer].softcapPower === undefined) layers[layer].softcapPower = new Decimal("0.5")
+    // if(layers[layer].softcap === undefined) layers[layer].softcap = new Decimal("e1e7")
+    // if(layers[layer].softcapPower === undefined) layers[layer].softcapPower = new Decimal("0.5")
     if(layers[layer].displayRow === undefined) layers[layer].displayRow = layers[layer].row
-    if(layers[layer].altRequires === undefined) layers[layer].altRequires = 0
     if(layers[layer].altResource === undefined) layers[layer].altResource = "none"
-    if(layers[layer].altBaseAmount === undefined) layers[layer].altBaseAmount = 0
     if(layers[layer].name === undefined) layers[layer].name = layer
     if(layers[layer].layerShown === undefined) layers[layer].layerShown = true
 
@@ -324,14 +320,10 @@ function setupAltLayer(layer){
     if(altLayers[layer].gainExp === undefined) altLayers[layer].gainExp = new Decimal(1)
     if(altLayers[layer].type === undefined) altLayers[layer].type = "none"
     if(altLayers[layer].base === undefined || altLayers[layer].base <= 1) altLayers[layer].base = 2
-    if(altLayers[layer].altBase === undefined || altLayers[layer].altBase <= 1) altLayers[layer].altBase = 2
-    if(altLayers[layer].altExp === undefined) altLayers[layer].altExp = 0.5
-    if(altLayers[layer].softcap === undefined) altLayers[layer].softcap = new Decimal("e1e7")
-    if(altLayers[layer].softcapPower === undefined) altLayers[layer].softcapPower = new Decimal("0.5")
+    // if(altLayers[layer].softcap === undefined) altLayers[layer].softcap = new Decimal("e1e7")
+    // if(altLayers[layer].softcapPower === undefined) altLayers[layer].softcapPower = new Decimal("0.5")
     if(altLayers[layer].displayRow === undefined) altLayers[layer].displayRow = altLayers[layer].row
-    if(altLayers[layer].altRequires === undefined) altLayers[layer].altRequires = 0
     if(altLayers[layer].altResource === undefined) altLayers[layer].altResource = "none"
-    if(altLayers[layer].altBaseAmount === undefined) altLayers[layer].altBaseAmount = 0
     if(altLayers[layer].name === undefined) altLayers[layer].name = layer
     if(altLayers[layer].layerShown === undefined) altLayers[layer].layerShown = true
 

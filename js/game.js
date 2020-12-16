@@ -9,6 +9,7 @@ const TMT_VERSION = {
 }
 
 function getResetGain(layer, useType = null) {
+	if (layers[layer] === undefined) {return}
 	let type = useType
 	if (!useType){ 
 		type = tmp[layer].type
@@ -25,7 +26,7 @@ function getResetGain(layer, useType = null) {
 	} else if (type=="normal"){
 		if (tmp[layer].baseAmount.lt(tmp[layer].requires)) return new Decimal(0)
 		let gain = tmp[layer].baseAmount.div(tmp[layer].requires).pow(tmp[layer].exponent).times(tmp[layer].gainMult).pow(tmp[layer].gainExp)
-		if (gain.gte(tmp[layer].softcap)) gain = gain.pow(tmp[layer].softcapPower).times(tmp[layer].softcap.pow(decimalOne.sub(tmp[layer].softcapPower)))
+		// if (gain.gte(tmp[layer].softcap)) gain = gain.pow(tmp[layer].softcapPower).times(tmp[layer].softcap.pow(decimalOne.sub(tmp[layer].softcapPower)))
 		return gain.floor().max(0);
 	} else if (type=="custom"){
 		return layers[layer].getResetGain()
@@ -35,6 +36,7 @@ function getResetGain(layer, useType = null) {
 }
 
 function getNextAt(layer, canMax=false, useType = null) {
+	if (layers[layer] === undefined) {return}
 	let type = useType
 	if (!useType) {
 		type = tmp[layer].type
@@ -58,7 +60,7 @@ function getNextAt(layer, canMax=false, useType = null) {
 		return cost;
 	} else if (type=="normal"){
 		let next = tmp[layer].resetGain.add(1)
-		if (next.gte(tmp[layer].softcap)) next = next.div(tmp[layer].softcap.pow(decimalOne.sub(tmp[layer].softcapPower))).pow(decimalOne.div(tmp[layer].softcapPower))
+		// if (next.gte(tmp[layer].softcap)) next = next.div(tmp[layer].softcap.pow(decimalOne.sub(tmp[layer].softcapPower))).pow(decimalOne.div(tmp[layer].softcapPower))
 		next = next.root(tmp[layer].gainExp).div(tmp[layer].gainMult).root(tmp[layer].exponent).times(tmp[layer].requires).max(tmp[layer].requires)
 		if (tmp[layer].roundUpCost) next = next.ceil()
 		return next;
@@ -69,36 +71,21 @@ function getNextAt(layer, canMax=false, useType = null) {
 	}
 }
 
-function getAltNextAt(layer, useType = null) {
-	let type = useType
-	if (!useType) type = tmp[layer].type
-	if (tmp[layer].type == "none")
-		return new Decimal (Infinity)
-
-	if (tmp[layer].gainMult.lte(0)) return new Decimal(Infinity)
-	if (tmp[layer].gainExp.lte(0)) return new Decimal(Infinity)
-
-	if (type=="static") 
-	{
-		if (tmp[layer].canBuyMax)
-			return new Decimal(0)
-
-
-		let amt = player[layer].points
-		let extraCost = Decimal.pow(tmp[layer].altBase, amt.pow(tmp[layer].altExp).div(tmp[layer].gainExp)).times(tmp[layer].gainMult)
-		let cost = extraCost.times(tmp[layer].altRequires).max(tmp[layer].altRequires)
-		if (tmp[layer].roundUpAltCost) cost = cost.ceil()
-		return cost;
-	} else {
-		return new Decimal(0)
-	}
+function getSecondNext(layer) {
+	let amt = player[layer].points.plus(tmp[layer].resetGain).minus(1)
+	let extraCost = Decimal.pow(tmp[layer].base, amt.pow(tmp[layer].exponent).div(tmp[layer].gainExp)).times(tmp[layer].gainMult)
+	let cost = extraCost.times(tmp[layer].requires).max(tmp[layer].requires)
+	if (tmp[layer].roundUpCost) cost = cost.ceil()
+	return cost;
 }
 
+/*
 function softcap(value, cap, power = 0.5) {
 	if (value.lte(cap)) return value
 	else
 		return value.pow(power).times(cap.pow(decimalOne.sub(power)))
 }
+*/
 
 // Return true if the layer should be highlighted. By default checks for upgrades only.
 function shouldNotify(layer){
@@ -122,6 +109,7 @@ function shouldNotify(layer){
 
 function canReset(layer)
 {	
+	if (layers[layer] === undefined) {return}
 	if (layers[layer].canReset!== undefined)
 		return run(layers[layer].canReset, layers[layer])
 	else if(tmp[layer].type == "normal")
@@ -131,10 +119,11 @@ function canReset(layer)
 	if(tmp[layer].type == "none")
 		return false
 	else
-		return tmp[layer].baseAmount.gte(tmp[layer].nextAt) && (tmp[layer].altRequires == 0 || tmp[layer].altBaseAmount.gte(tmp[layer].altNextAt))
+		return tmp[layer].baseAmount.gte(tmp[layer].nextAt)
 }
 
 function rowReset(row, layer) {
+	if (layers[layer] === undefined) {return}
 	for (lr in ROW_LAYERS[row]){
 		if(layers[lr].doReset) {
 
@@ -147,6 +136,8 @@ function rowReset(row, layer) {
 }
 
 function layerDataReset(layer, keep = []) {
+	if (layers[layer] === undefined) {return}
+
 	let storedData = {unlocked: player[layer].unlocked} // Always keep unlocked
 
 	for (thing in keep) {
@@ -154,8 +145,7 @@ function layerDataReset(layer, keep = []) {
 			storedData[keep[thing]] = player[layer][keep[thing]]
 	}
 
-	if (layers[layer]) { layOver(player[layer], getStartLayerData(layer)) }
-	else { layOver(player[layer], getStartAltLayerData(layer)) }
+	layOver(player[layer], getStartLayerData(layer))
 	player[layer].upgrades = []
 	player[layer].milestones = []
 	player[layer].challenges = getStartChallenges(layer)
@@ -169,6 +159,7 @@ function layerDataReset(layer, keep = []) {
 }
 
 function resetBuyables(layer){
+	if (layers[layer] === undefined) {return}
 	if (layers[layer].buyables) 
 		player[layer].buyables = getStartBuyables(layer)
 	player[layer].spentOnBuyables = new Decimal(0)
@@ -176,18 +167,21 @@ function resetBuyables(layer){
 
 
 function addPoints(layer, gain) {
+	if (layers[layer] === undefined) {return}
 	player[layer].points = player[layer].points.add(gain).max(0)
 	if (player[layer].best) player[layer].best = player[layer].best.max(player[layer].points)
 	if (player[layer].total) player[layer].total = player[layer].total.add(gain)
 }
 
 function generatePoints(layer, diff) {
+	if (layers[layer] === undefined) {return}
 	addPoints(layer, tmp[layer].resetGain.times(diff))
 }
 
 var prevOnReset
 
 function doReset(layer, force=false) {
+	if (layers[layer] === undefined) {return}
 	if (tmp[layer].type == "none") return
 	let row = tmp[layer].row
 	if (!force) {

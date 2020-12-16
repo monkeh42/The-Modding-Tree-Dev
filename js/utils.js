@@ -161,7 +161,7 @@ function getStartPlayer() {
 
 function getStartLayerData(layer){
 	layerdata = {}
-	if (layers[layer]) {
+	if (layers[layer] !== undefined) {
 		if (layers[layer].startData) 
 			layerdata = layers[layer].startData()
 
@@ -175,6 +175,14 @@ function getStartLayerData(layer){
 	} else {
 		if (altLayers[layer].startData) 
 			layerdata = altLayers[layer].startData()
+
+		layerdata.buyables = getStartBuyables(layer)
+		if(layerdata.clickables == undefined) layerdata.clickables = getStartClickables(layer)
+		layerdata.spentOnBuyables = new Decimal(0)
+		layerdata.upgrades = []
+		layerdata.milestones = []
+		layerdata.achievements = []
+		layerdata.challenges = getStartChallenges(layer)
 	}
 
 	if (layerdata.unlocked === undefined) layerdata.unlocked = true
@@ -187,6 +195,7 @@ function getStartLayerData(layer){
 
 function getStartBuyables(layer){
 	let data = {}
+	if (layers[layer] === undefined) return data
 	if (layers[layer].buyables) {
 		for (id in layers[layer].buyables)
 			if (isPlainObject(layers[layer].buyables[id]))
@@ -197,16 +206,18 @@ function getStartBuyables(layer){
 
 function getStartClickables(layer){
 	let data = {}
+	if (layers[layer] === undefined) return data
 	if (layers[layer].clickables) {
 		for (id in layers[layer].clickables)
 			if (isPlainObject(layers[layer].clickables[id]))
-				data[id] = ""
+				data[id] = 0
 	}
 	return data
 }
 
 function getStartChallenges(layer){
 	let data = {}
+	if (layers[layer] === undefined) return data
 	if (layers[layer].challenges) {
 		for (id in layers[layer].challenges)
 			if (isPlainObject(layers[layer].challenges[id]))
@@ -529,11 +540,43 @@ function setBuyableAmount(layer, id, amt){
 }
 
 function getClickableState(layer, id){
-	return (player[layer].clickables[id])
+	if (player[layer].clickables[id]) {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+function getActivityGain(id, diff) {
+	if (getClickableState("n", id)) { 
+		if (player.n[id.toString()].lt(getPPLimit("n", id)) || id == 13) {
+			eff = new Decimal(1).times(clickableEffect("n", id)).times(diff)
+			if (getBuyableAmount("s", 11).gt(0)) { eff = eff.times(buyableEffect("s", 11)) }
+			addActivityGain(id, eff)
+			if (id == 13) { player.n["resTime"] = player.n["resTime"].plus(diff) }
+
+		}
+	}
+}
+
+function addActivityGain(id, gain) {
+	player.n[id.toString()] = player.n[id.toString()].plus(gain)
+	player.n[id.toString()+"total"] = player.n[id.toString()+"total"].plus(gain)
+	player.n[id.toString()+"best"] = (player.n[id.toString()].plus(gain)).max(player.n[id.toString()+"best"])
 }
 
 function setClickableState(layer, id, state){
-	player[layer].clickables[id] = state
+	if (state == 0) {
+		player[layer].clickables[id] = ""
+	} else {
+		player[layer].clickables[id] = "1"
+	}
+}
+
+function getPPLimit(layer, id){
+	if (id == 11) { return tmp[layer].pestLimit }
+	else if (id == 12) { return tmp[layer].puisLimit }
+	else { return new Decimal(0) }
 }
 
 function upgradeEffect(layer, id){
@@ -578,6 +621,12 @@ function canAffordPurchase(layer, thing, cost) {
 
 function buyUpgrade(layer, id) {
 	buyUpg(layer, id)
+}
+
+function respecSkills() {
+	for (lr in altLayers) {
+		player[lr].bought = false
+	}
 }
 
 function buyUpg(layer, id) {
@@ -661,6 +710,47 @@ function inChallenge(layer, id){
 
 // ************ Misc ************
 
+function getExpPoints() {
+	if (player.p.total.gt(0)) { return player.p.total.minus(player.p.spent) } else { return 0 }
+}
+
+function getUnmetReqs(layer) {
+	reqs = []
+	reqString = ""
+	if (player[layer].bought) { 
+		reqString = "Purchased." 
+	} else if (!tmp[layer].researchCompleted) {
+		reqString = "Requires: " + getMileReq(tmp[layer].researchNeeded[0], tmp[layer].researchNeeded[1]) + "."
+	} else if (!prereqsPurchased(layer)) {
+		for (id in tmp[layer].branches) {
+			if (!player[tmp[layer].branches[id]].bought) { reqs.push(tmp[layer].branches[id]) }
+		}
+		if (reqs.length) { 
+			reqString = "Requires: "
+			for (i=0; i<reqs.length; i++) { 
+				reqString += tmp[reqs[i]].fullName
+				if ((i+1)<reqs.length) { reqString += ", " }
+			}
+			reqString += "."
+		}
+	} else {
+		reqString = "Cost: " + formatWhole(player[layer].cost) + " experience points."
+	}
+	return reqString
+}
+
+function prereqsPurchased(layer) {
+	if (tmp[layer].branches.length == 0) { return true }
+	for (id in tmp[layer].branches) {
+		if (!player[tmp[layer].branches[id]].bought) { return false }
+	}
+	return true
+}
+
+function getMileReq(layer, id) {
+	return tmp[layer].milestones[id].requirementDescription
+}
+
 var onTreeTab = true
 function showTab(name) {
 	if (LAYERS.includes(name) && !layerunlocked(name)) return
@@ -698,6 +788,7 @@ function layOver(obj1, obj2) {
 }
 
 function prestigeNotify(layer) {
+	if (layers[layer] === undefined) return false
 	if (layers[layer].prestigeNotify) return layers[layer].prestigeNotify()
 	else if (tmp[layer].autoPrestige || tmp[layer].passiveGeneration) return false
 	else if (tmp[layer].type == "static") return tmp[layer].canReset
@@ -739,7 +830,7 @@ function nodeShown(layer) {
 
 function layerunlocked(layer) {
 	if (tmp[layer] && tmp[layer].type == "none") return (player[layer].unlocked)
-	return LAYERS.includes(layer) && (player[layer].unlocked || (tmp[layer].baseAmount.gte(tmp[layer].requires) && tmp[layer].layerShown))
+	return (layers[layer] !== undefined) && (player[layer].unlocked || (tmp[layer].baseAmount.gte(tmp[layer].requires) && tmp[layer].layerShown))
 }
 
 function keepGoing() {
@@ -818,7 +909,8 @@ function focused(x) {
 
 function prestigeButtonText(layer)
 {
-	if (layers[layer].prestigeButtonTest !== undefined)
+	if (layers[layer] === undefined) return "You need prestige button text"
+	if (layers[layer].prestigeButtonText !== undefined)
 		return layers[layer].prestigeButtonText()
 	else if(tmp[layer].type == "normal")
 		return `${ player[layer].points.lt(1e3) ? (tmp[layer].resetDescription !== undefined ? tmp[layer].resetDescription : "Reset for ") : ""}+<b>${formatWhole(tmp[layer].resetGain)}</b> ${tmp[layer].resource} ${tmp[layer].resetGain.lt(100) && player[layer].points.lt(1e3) ? `<br><br>Next at ${ (tmp[layer].roundUpCost ? formatWhole(tmp[layer].nextAt) : format(tmp[layer].nextAt))} ${ tmp[layer].baseResource }` : ""}`

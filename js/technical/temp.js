@@ -28,7 +28,16 @@ function setupTemp() {
 		tmp[layer].resetGain = {}
 		tmp[layer].nextAt = {}
 		tmp[layer].nextAtDisp = {}
-		tmp[layer].altNextAt = {}
+		tmp[layer].canReset = {}
+		tmp[layer].notify = {}
+		tmp[layer].prestigeNotify = {}
+		tmp[layer].prestigeButtonText = {}
+		setupBarStyles(layer)
+	}
+	for (layer in altLayers){
+		tmp[layer].resetGain = {}
+		tmp[layer].nextAt = {}
+		tmp[layer].nextAtDisp = {}
 		tmp[layer].canReset = {}
 		tmp[layer].notify = {}
 		tmp[layer].prestigeNotify = {}
@@ -74,7 +83,20 @@ function updateTemp() {
 	for (layer in layers){
 		tmp[layer].resetGain = getResetGain(layer)
 		tmp[layer].nextAt = getNextAt(layer)
-		tmp[layer].altNextAt = getAltNextAt(layer)
+		tmp[layer].nextAtDisp = getNextAt(layer, true)
+		tmp[layer].canReset = canReset(layer)
+		tmp[layer].notify = shouldNotify(layer)
+		tmp[layer].prestigeNotify = prestigeNotify(layer)
+		tmp[layer].prestigeButtonText = prestigeButtonText(layer)
+		constructBarStyles(layer)
+		constructAchievementStyles(layer)
+		updateChallengeDisplay(layer)
+
+	}
+
+	for (layer in altLayers){
+		tmp[layer].resetGain = getResetGain(layer)
+		tmp[layer].nextAt = getNextAt(layer)
 		tmp[layer].nextAtDisp = getNextAt(layer, true)
 		tmp[layer].canReset = canReset(layer)
 		tmp[layer].notify = shouldNotify(layer)
@@ -169,6 +191,8 @@ function constructAchievementStyles(layer){
 }
 
 function constructBarStyles(layer){
+	if (layers[layer] === undefined)
+		return
 	if (layers[layer].bars === undefined)
 		return
 	for (id in layers[layer].bars){
@@ -204,11 +228,21 @@ function constructBarStyles(layer){
 }
 
 function setupBarStyles(layer){
-	if (layers[layer].bars === undefined)
-		return
-	for (id in layers[layer].bars){
-		let bar = tmp[layer].bars[id]
-		bar.dims = {}
-		bar.fillDims = {}
+	if (layers[layer] !== undefined) {
+		if (layers[layer].bars === undefined)
+			return
+		for (id in layers[layer].bars){
+			let bar = tmp[layer].bars[id]
+			bar.dims = {}
+			bar.fillDims = {}
+		}
+	} else {
+		if (altLayers[layer].bars === undefined)
+			return
+		for (id in altLayers[layer].bars){
+			let bar = tmp[layer].bars[id]
+			bar.dims = {}
+			bar.fillDims = {}
+		}
 	}
 }
