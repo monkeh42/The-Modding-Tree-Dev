@@ -65,12 +65,12 @@ function addedPlayerData() { return {
 
 // Display extra things at the top of the page
 var displayThings = [
-	"Endgame: 2 exterminated planets"
+	"Endgame: 15 total exterminated planets"
 ]
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.p.resets.gte(new Decimal(2))
+	return player.p.total.gte(new Decimal(15))
 }
 
 
