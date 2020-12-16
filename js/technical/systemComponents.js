@@ -41,7 +41,7 @@ var systemComponents = {
 				bought: !tmp[layer].isLayer && player[layer].bought && isAltLayer(layer),
 				notify: tmp[layer].notify,
 				resetNotify: tmp[layer].prestigeNotify,
-				can: ((player[layer].unlocked || tmp[layer].isLayer) && tmp[layer].isLayer) || (!tmp[layer].isLayer && tmp[layer].canClick),
+				can: (player[layer].unlocked && tmp[layer].isLayer) || (!tmp[layer].isLayer && tmp[layer].canClick),
 			}"
 			v-bind:style="[(tmp[layer].isLayer && layerunlocked(layer)) || (!tmp[layer].isLayer && tmp[layer].canClick) ? {
 				'background-color': tmp[layer].color,

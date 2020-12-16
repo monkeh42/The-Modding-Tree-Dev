@@ -35,7 +35,7 @@ addLayer("z", {
         return exp
     },
     effectExp() {
-        let exp = new Decimal(0.5)
+        let exp = new Decimal(0.65)
         if (hasUpgrade("z", 13)) { exp = exp.plus(upgradeEffect("z", 13)) }
         return exp
     },
@@ -45,7 +45,7 @@ addLayer("z", {
         return eff
     },
     effect() {
-        let eff = tmp.z.effectBase.plus(player.z.points).pow(tmp.z.effectExp) 
+        let eff = tmp.z.effectBase.plus(player.z.points.times(2)).pow(tmp.z.effectExp).max(1) 
         if (player.f.unlocked && player.z.points.gt(0)) eff = eff.times(tmp.f.powerEff)
         eff = softcap("zEff", eff)
         return eff
@@ -91,7 +91,7 @@ addLayer("z", {
             cost() { return tmp.z.upCostMult.times(5) },
             unlocked() { return hasUpgrade("z", 12) },
             effect() { 
-                let eff = new Decimal(0.1)
+                let eff = new Decimal(0.15)
                 if (hasUpgrade("f", 23)) eff = eff.plus(0.1)
                 return eff
             },
@@ -134,7 +134,7 @@ addLayer("z", {
             cost() { return tmp.z.upCostMult.times(500) },
             unlocked () { return player.a.unlocked && player.f.unlocked },
             effect() { 
-                let eff = player.z.total.plus(1).log10().plus(1).pow(0.5).minus(1).max(1)
+                let eff = player.z.total.plus(1).ln().plus(1).pow(0.5).minus(1).max(1)
                 return eff
             },
             effectDisplay() { return format(tmp.z.upgrades[31].effect)+"x" },
@@ -319,10 +319,10 @@ addLayer("a", {
         22: {
             title: "Spontaneous Generation",
             description: "Abominations are cheaper based on corpses.",
-            cost() { return tmp.a.upCostMult.times(30) },
+            cost() { return tmp.a.upCostMult.times(25) },
             unlocked() { return hasUpgrade("a", 21) },
             effect() {
-                eff = player.points.plus(1).log10().plus(1).pow(2)
+                eff = player.points.plus(1).pow(2).log10().plus(1).pow(3)
                 return eff
             },
             effectDisplay() { return "/" + format(tmp.a.upgrades[22].effect) },
@@ -430,18 +430,18 @@ addLayer("f", {
         return base
     },
     effect() {
-        eff = Decimal.pow(this.effBase(), player.f.points.max(1).log10().max(1)).sub(0.5)
+        eff = Decimal.pow(this.effBase(), player.f.points.max(1)).times(player.f.power.plus(1).log10()).max(1).sub(0.5)
         if(hasUpgrade("n", 12)) { eff = eff.times(player.n.points.pow(3)) }
         if (getBuyableAmount("s", 11).gt(0)) { eff = eff.times(buyableEffect("s", 11)) }
         return eff
     },
     limit() {
-        lim = Decimal.pow(this.effBase().times(1.2), player.f.best)
+        lim = Decimal.pow(this.effBase().times(1.5), player.f.best)
         if (hasUpgrade("n", 11)) { lim = lim.times(upgradeEffect("n", 11)) }
         return lim.max(25)
     },
     update(diff) {
-        if (player.f.unlocked && player.f.power.lt(tmp[this.layer].limit)) player.f.power = player.f.power.plus(tmp[this.layer].effect.times(diff)).max(tmp[this.layer].limit)
+        if (player.f.unlocked && player.f.power.lt(tmp.f.limit)) player.f.power = player.f.power.plus(tmp.f.effect.times(diff))
     },
     powerExp() {
         exp = new Decimal(0.75)
@@ -450,12 +450,12 @@ addLayer("f", {
         return exp
     },
     powerEff() {
-        eff = player.f.power.plus(1).pow(0.5).div(3).max(1).pow(this.powerExp())
+        eff = player.f.power.plus(1).pow(0.5).div(3).max(1).pow(this.powerExp()).max(1)
         if (player.n["13"].gt(0)) { eff = eff.times(tmp["n"].resEffect) }
         return eff
     },
     effectDescription() { 
-        return "which are manufacturing "+format(tmp.f.effect)+" armaments/sec, but with a limit of " + format(this.limit()) + " armaments" //+(tmp.nerdMode?("\n ("+format(tmp.g.effBase)+"x each)"):"") 
+        return "which are manufacturing "+format(this.effect())+" armaments/sec, but with a limit of " + format(this.limit()) + " armaments" //+(tmp.nerdMode?("\n ("+format(tmp.g.effBase)+"x each)"):"") 
     },
     tabFormat: ["main-display",
 		"prestige-button",
@@ -515,7 +515,7 @@ addLayer("f", {
             effect() {
                 eff = player.f.points
                 effExp = new Decimal(0.5)
-                if (hasUpgrade("f", 21)) { effExp = effExp.plus(0.2) }
+                if (hasUpgrade("f", 21)) { effExp = effExp.plus(0.5) }
                 eff = eff.plus(1).pow(effExp)
                 return eff
             },
@@ -540,14 +540,14 @@ addLayer("f", {
         },
         21: {
             title: "Assembly Lines",
-            description: "Add 0.2 to the <h3>Corpse Processing Facility</h3> exponent.",
+            description: "Add 0.5 to the <h3>Corpse Processing Facility</h3> exponent.",
             cost() { return tmp.f.upCostMult.times(15) },
             unlocked() { return hasUpgrade("f", 14) },
         },
         22: {
             title: "Field Stitching",
             description: "Armaments boost zombie gain.",
-            cost() { return tmp.f.upCostMult.times(30) },
+            cost() { return tmp.f.upCostMult.times(25) },
             unlocked() { return hasUpgrade("f", 21) },
             effect() {
                 let eff = player.f.power.pow(0.25).pow(0.5).max(1)
