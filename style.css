@@ -86,7 +86,7 @@ h1, h2, h3, b, input {
 	padding: 0;
 }
 
-.treeNode .locked {
+.treeNode.locked {
 	color: rgba(0, 0, 0, 0.5) !important;
 }
 
