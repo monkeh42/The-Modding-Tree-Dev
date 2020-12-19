@@ -43,9 +43,9 @@ function getPointGen() {
 	let gain = new Decimal(1)
 	if (hasUpgrade("f", 11) || hasUpgrade("a", 11)) { gain = gain.plus(1) }
 
-	if (player.a.unlocked) gain = gain.plus(tmp.a.effect)
+	if (player.a.unlocked) gain = gain.times(tmp.a.effect)
 
-	gain = gain.times(tmp.z.effect) 
+	if (player.z.points.gt(0)) gain = gain.times(tmp.z.effect) 
 	if (hasUpgrade("z", 12)) { gain = gain.times(upgradeEffect("z", 12)) }
 	if (hasUpgrade("z", 21)) { gain = gain.times(upgradeEffect("z", 21)) }
 	if (hasUpgrade("z", 23)) { gain = gain.times(upgradeEffect("z", 23)) }
@@ -54,14 +54,17 @@ function getPointGen() {
 	if (hasUpgrade("f", 24)) { gain = gain.times(upgradeEffect("f", 24)) }
 	if (player.wd.bought) { gain = gain.times(tmp["wd"].effect) }
 	if (player.n[11].gt(0)) { gain = gain.times(tmp["n"].pestEffect) }
-	if (getBuyableAmount("s", 11).gt(0)) { gain = gain.times(buyableEffect("s", 11)) }
+	if (getBuyableAmount("s", 11)) { gain = gain.times(buyableEffect("s", 11)) }
+	if (player.fl.bought) { gain = gain.times(tmp["fl"].effect) }
 
 	return gain
 }
 
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
 function addedPlayerData() { return {
+	pastMilestones: {},
 	devSpeed: 1,
+	bestPoints: new Decimal(0),
 }}
 
 // Display extra things at the top of the page

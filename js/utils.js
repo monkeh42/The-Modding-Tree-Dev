@@ -535,6 +535,10 @@ function getBuyableAmount(layer, id){
 	return (player[layer].buyables[id])
 }
 
+function getBuyableCost(layer, id) {
+	return (player[layer].buyables[id])
+}
+
 function setBuyableAmount(layer, id, amt){
 	player[layer].buyables[id] = amt
 }
@@ -551,10 +555,15 @@ function getActivityGain(id, diff) {
 	if (getClickableState("n", id)) { 
 		if (player.n[id.toString()].lt(getPPLimit("n", id)) || id == 13) {
 			eff = new Decimal(1).times(clickableEffect("n", id)).times(diff)
-			if (getBuyableAmount("s", 11).gt(0)) { eff = eff.times(buyableEffect("s", 11)) }
+			if (getBuyableAmount("s", 11)) { eff = eff.times(buyableEffect("s", 11)) }
 			addActivityGain(id, eff)
-			if (id == 13) { player.n["resTime"] = player.n["resTime"].plus(diff) }
-
+			if (id == 13) { 
+				if (hasUpgrade("s", 13)) { 
+					player.n["resTime"] = player.n["resTime"].plus(new Decimal(2).times(diff))
+				} else {
+					player.n["resTime"] = player.n["resTime"].plus(diff)
+				}
+			}
 		}
 	}
 }
@@ -852,7 +861,9 @@ function updateMilestones(layer){
 	for (id in layers[layer].milestones){
 		if (!(player[layer].milestones.includes(id)) && layers[layer].milestones[id].done()){
 			player[layer].milestones.push(id)
-			if (tmp[layer].milestonePopups || tmp[layer].milestonePopups === undefined) doPopup("milestone", tmp[layer].milestones[id].requirementDescription, "Milestone Gotten!", 3, tmp[layer].color);
+			if (player.pastMilestones[layer] !== undefined) {
+				if (!player.pastMilestones[layer].includes(id)) doPopup("milestone", tmp[layer].milestones[id].requirementDescription, "Milestone Gotten!", 3, tmp[layer].color);
+			}
 		}
 	}
 }

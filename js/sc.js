@@ -10,7 +10,22 @@ const SOFTCAPS = {
         start: new Decimal(1e20),
         type: "root",
         mag: new Decimal(2),
-    }
+	},
+	mGain: {
+		start: new Decimal("1e500"),
+		type: "log",
+		exp: new Decimal(2),
+	},
+	sGain: {
+		start: new Decimal(1000),
+        type: "expRoot",
+        mag: new Decimal(5)
+	},
+	zGain: {
+		start: new Decimal(1e200),
+        type: "root",
+        mag: new Decimal(4)
+	}
 }
 
 function softcapActive(name, val) {
@@ -26,6 +41,7 @@ function getSoftcapData(name, id) {
 
 function softcap(name, val) {
 	val = new Decimal(val);
+
 	if (!softcapActive(name, val)) return val;
 	let type = getSoftcapData(name, "type");
 	let start = getSoftcapData(name, "start");

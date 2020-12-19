@@ -17,6 +17,11 @@ addLayer("z", {
     baseAmount() {return player.points}, // Get the current amount of baseResource
     type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     exponent: 0.5, // Prestige currency exponent
+    getResetGain() { 
+        gain = getResetGain("z", "normal")
+        gain = softcap("zGain", gain)
+        return gain
+    },
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
         if (hasUpgrade("z", 22)) { mult = mult.times(upgradeEffect("z", 22)) }
@@ -25,6 +30,7 @@ addLayer("z", {
         if (hasUpgrade("f", 12)) { mult = mult.times(upgradeEffect("f", 12)) }
         if (hasUpgrade("f", 22)) { mult = mult.times(upgradeEffect("f", 22)) }
         if (hasUpgrade("a", 21)) { mult = mult.times(upgradeEffect("a", 21)) }
+        if (hasUpgrade("n", 12)) { mult = mult.times(upgradeEffect("n", 12)) }
         if (player.mn.bought) { mult = mult.times(tmp["mn"].effect) }
         if (player.wd.bought) { mult = mult.times(tmp["wd"].zEffect) }
         return mult
@@ -35,22 +41,23 @@ addLayer("z", {
         return exp
     },
     effectExp() {
-        let exp = new Decimal(0.65)
+        let exp = new Decimal(0.5)
         if (hasUpgrade("z", 13)) { exp = exp.plus(upgradeEffect("z", 13)) }
+        if (hasUpgrade("z", 32)) { exp = exp.plus(upgradeEffect("z", 32)) } 
         return exp
     },
     effectBase() {
-        let eff = new Decimal(1)
-        if (hasUpgrade("z", 32)) { eff = eff.plus(upgradeEffect("z", 32)) } 
+        let eff = new Decimal(2)        
         return eff
     },
     effect() {
         let eff = tmp.z.effectBase.plus(player.z.points.times(2)).pow(tmp.z.effectExp).max(1) 
+        eff = eff.times(player.z.points.log10().max(1))
         if (player.f.unlocked && player.z.points.gt(0)) eff = eff.times(tmp.f.powerEff)
         eff = softcap("zEff", eff)
         return eff
     },
-    effectDescription() { return "which are boosting corpse gain by "+format(tmp.z.effect)+"x" + (softcapActive("zEff", tmp.z.effect) ? " (softcapped)" : "") },
+    effectDescription() { return "which are boosting corpse gain by "+(player.z.points.gt(0) ? format(tmp.z.effect) : "1.00")+"x" + (softcapActive("zEff", tmp.z.effect) ? " (softcapped)" : "") },
     row: 0, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
         {key: "z", description: "z: stitch your corpses into zombies", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
@@ -61,7 +68,7 @@ addLayer("z", {
         let keep = [];
         if (hasMilestone("a", 0) && resettingLayer=="a") keep.push("upgrades")
         if (hasMilestone("f", 0) && resettingLayer=="f") keep.push("upgrades")
-        if (hasMilestone("p", 1) && layers[resettingLayer].row==2) keep.push("upgrades")
+        if (hasMilestone("p", 1) && (layers[resettingLayer].row<=2)) keep.push("upgrades")
         if (layers[resettingLayer].row > this.row) layerDataReset("z", keep)
     },
     upCostMult: new Decimal(1),
@@ -145,10 +152,10 @@ addLayer("z", {
             cost() { return tmp.z.upCostMult.times(1000) },
             unlocked () { return hasUpgrade("z", 31) },
             effect() { 
-                let eff = player.a.points.plus(1).log10().plus(1)
+                let eff = player.a.points.plus(1).log10().plus(1).div(50)
                 return eff
             },
-            effectDisplay() { return "+"+format(tmp.z.upgrades[32].effect)+" to effect base" },
+            effectDisplay() { return "+"+format(tmp.z.upgrades[32].effect)+" to effect exponent" },
         }, 
         33: {
             title: "Zombie Fabricators",
@@ -156,7 +163,7 @@ addLayer("z", {
             cost() { return tmp.z.upCostMult.times(1000) },
             unlocked () { return hasUpgrade("z", 31) },
             effect() { 
-                let eff = player.a.points.plus(1).log10().div(12)
+                let eff = player.f.points.plus(1).log10().plus(1).div(50)
                 return eff
             },
             effectDisplay() { return "+"+format(tmp.z.upgrades[33].effect)+" to gain exponent" },
@@ -196,6 +203,7 @@ addLayer("a", {
         
         if (hasUpgrade("a", 22)) { mult = mult.times(new Decimal(1).div(upgradeEffect("a", 22))) }
         if(player.mn.bought) { mult = mult.times(new Decimal(1).div(tmp["mn"].effect)) }
+        if (hasUpgrade("f", 13)) { mult = mult.times(new Decimal(1).div(upgradeEffect("f", 13))) }
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -210,21 +218,25 @@ addLayer("a", {
         return exp
     }, */
     effectBase() {
-        base = player.a.points
-        if (hasUpgrade("f", 13)) { base = base.times(upgradeEffect("f", 13)) }
+        base = player.a.points.pow(0.5)
+        base = base.times(new Decimal(2).pow(player.s[12].resets))
+        if (hasUpgrade("a", 31)) { base = base.pow(2) }
         return base
     },
     effectExp() {
-        exp = new Decimal(0.75)
+        exp = new Decimal(0.5)
         
         return exp
     },
     effect() {
-        eff = Decimal.pow(this.effectBase(), this.effectExp()).div(2)
+        eff = Decimal.pow(this.effectBase(), this.effectExp()).div(2).max(1)
         if (hasMilestone("f", 1)) eff = eff.times(tmp.f.powerEff.pow(0.5))
+        if (hasMilestone("a", 3)) eff = eff.pow(2)
+        if (getBuyableAmount("s", 12).gt(0)) eff = eff.times(buyableEffect("s", 12))
+        
         return eff
     },
-    effectDescription() { return "which are giving +"+format(tmp.a.effect)+" to base corpse gain" },
+    effectDescription() { return "which are boosting corpse gain by "+format(tmp.a.effect)+"x" },
     tabFormat: ["main-display",
 		"prestige-button",
 		"blank",
@@ -254,6 +266,8 @@ addLayer("a", {
             }
         }
 
+        if (hasMilestone("p", 3) && layers[resettingLayer].row==2) keep.push("milestones")
+        if (hasMilestone("s", 1) && resettingLayer=="s") keep.push("upgrades")
         if (hasMilestone("p", 2) && resettingLayer=="p") keep.push("upgrades")
         if (layers[resettingLayer].row > this.row) layerDataReset("a", keep)
         if (hasMilestone("s", 0)) { player.a.auto = prevAuto }
@@ -262,7 +276,7 @@ addLayer("a", {
     layerShown() { return player.z.unlocked },
     upCostMult: new Decimal(1),
     upgrades: {
-        rows: 2,
+        rows: 3,
         cols: 4,
         11: {
             title: "Militarize",
@@ -278,7 +292,7 @@ addLayer("a", {
             description: "Total abominations boost zombie gain.",
             cost() { return tmp.a.upCostMult.times(2) },
             effect() {
-                eff = player.a.total.sqrt().plus(1)
+                eff = player.a.total.pow(0.75).plus(1)
                 return eff
             },
             effectDisplay() { return format(tmp.a.upgrades[12].effect)+"x" },
@@ -296,11 +310,11 @@ addLayer("a", {
         },
         14: {
             title: "Necro-Steroids",
-            description: "Abominations^4 multiply corpse gain.",
+            description: "Abominations multiply corpse gain.",
             cost() { return tmp.a.upCostMult.times(8) },
             unlocked() { return hasUpgrade("a", 13) },
             effect() {
-                eff = player.a.points.pow(4).max(1)
+                eff = player.a.points.max(1)
                 return eff
             },
             effectDisplay() { return format(tmp.a.upgrades[14].effect)+"x" },
@@ -311,7 +325,8 @@ addLayer("a", {
             cost() { return tmp.a.upCostMult.times(15) },
             unlocked() { return hasUpgrade("a", 14) },
             effect() {
-                eff = player.a.points.pow(2).times(1.5).plus(1)
+                eff = player.a.points
+                eff = eff.pow(2).plus(1)
                 return eff
             },
             effectDisplay() { return format(tmp.a.upgrades[21].effect)+"x" },
@@ -319,10 +334,12 @@ addLayer("a", {
         22: {
             title: "Spontaneous Generation",
             description: "Abominations are cheaper based on corpses.",
-            cost() { return tmp.a.upCostMult.times(25) },
+            cost() { return tmp.a.upCostMult.times(20) },
             unlocked() { return hasUpgrade("a", 21) },
             effect() {
-                eff = player.points.plus(1).pow(2).log10().plus(1).pow(3)
+                eff = player.points
+                if (hasUpgrade("a", 31)) { eff = eff.times(4) }
+                eff = eff.plus(1).pow(2).log10().plus(1).pow(3)
                 return eff
             },
             effectDisplay() { return "/" + format(tmp.a.upgrades[22].effect) },
@@ -330,7 +347,7 @@ addLayer("a", {
         23: {
             title: "Plague",
             description: "<h3>Disease</h3> is stronger based on your abominations.",
-            cost() { return tmp.a.upCostMult.times(35) },
+            cost() { return tmp.a.upCostMult.times(25) },
             unlocked() { return hasUpgrade("a", 22) },
             effect() {
                 eff = player.a.points.pow(0.5).div(3).plus(1)
@@ -340,17 +357,23 @@ addLayer("a", {
         },
         24: {
             title: "Fear",
-            description: "Multiply corpse gain by your best exterminated planets^6.",
+            description() { return `Multiply corpse gain by your best exterminated planets^6${player.pt.bought ? " (^10 after Primal Terror)" : ""}.` },
             cost() { return tmp.a.upCostMult.times(50) },
             unlocked() { return hasUpgrade("a", 23) && player.p.unlocked },
             effect() {
-                eff = player.p.best.plus(1)
+                eff = player.p.best.max(1)
                 effExp = new Decimal(6)
-                if (player.pt.bought) { eff = eff.plus(tmp["pt"].effect) }
+                if (player.pt.bought) { effExp = effExp.plus(tmp["pt"].effect) }
                 return eff.pow(effExp)
             },
             effectDisplay() { return format(tmp.a.upgrades[24].effect) + "x" },
         },
+        31: {
+            title: "Veterans",
+            description: "Square the abomination effect base and quadruple the <h3>Spontaneous Generation</h3> base.",
+            cost() { return tmp.a.upCostMult.times(75) },
+            unlocked() { return hasMilestone("p", 1) },
+        }
     }, 
     milestones: {
         0: {
@@ -367,6 +390,11 @@ addLayer("a", {
             requirementDescription: "15 abominations",
             done() { return player.a.best.gte(15) },
             effectDescription: "You can buy max abominations",
+        },
+        3: {
+            requirementDescription: "30 abominations",
+            done() { return player.a.best.gte(30) },
+            effectDescription: "Square the abomination effect",
         },
     },
 })
@@ -425,13 +453,13 @@ addLayer("f", {
     },
     effBase() {
         base = new Decimal(2)
+        if (hasUpgrade("f", 31)) { base = base.plus(1) }
         if(hasUpgrade("a", 13)) base = base.plus(upgradeEffect("a", 13))
 
         return base
     },
     effect() {
-        eff = Decimal.pow(this.effBase(), player.f.points.max(1)).times(player.f.power.plus(1).log10()).max(1).sub(0.5)
-        if(hasUpgrade("n", 12)) { eff = eff.times(player.n.points.pow(3)) }
+        eff = Decimal.pow(this.effBase(), player.f.points).minus(1).times(player.f.power.plus(1).log10().max(1))
         if (getBuyableAmount("s", 11).gt(0)) { eff = eff.times(buyableEffect("s", 11)) }
         return eff
     },
@@ -441,7 +469,7 @@ addLayer("f", {
         return lim.max(25)
     },
     update(diff) {
-        if (player.f.unlocked && player.f.power.lt(tmp.f.limit)) player.f.power = player.f.power.plus(tmp.f.effect.times(diff))
+        if (player.f.unlocked && player.f.power.lt(tmp.f.limit) && player.f.points.gt(0)) player.f.power = player.f.power.plus(tmp.f.effect.times(diff))
     },
     powerExp() {
         exp = new Decimal(0.75)
@@ -451,7 +479,8 @@ addLayer("f", {
     },
     powerEff() {
         eff = player.f.power.plus(1).pow(0.5).div(3).max(1).pow(this.powerExp()).max(1)
-        if (player.n["13"].gt(0)) { eff = eff.times(tmp["n"].resEffect) }
+        if (player.n["13"].gt(0) && getClickableState("n", 2)) { eff = eff.times(tmp["n"].resEffect) }
+        if (hasMilestone("f", 3)) eff = eff.times(player.f.power.log10())
         return eff
     },
     effectDescription() { 
@@ -489,6 +518,7 @@ addLayer("f", {
             }
         }
 
+        if (hasMilestone("n1", 1) && resettingLayer=="n") keep.push("upgrades")
         if (hasMilestone("p", 2) && resettingLayer=="p") keep.push("upgrades")
         if (layers[resettingLayer].row > this.row) layerDataReset("f", keep)
         if (hasMilestone("n1", 0)) { player.f.auto = prevAuto }
@@ -497,7 +527,7 @@ addLayer("f", {
     layerShown() { return player.z.unlocked },
     upCostMult: new Decimal(1), 
     upgrades: {
-        rows: 2,
+        rows: 3,
         cols: 4,
         11: {
             title: "Industrialize",
@@ -523,18 +553,20 @@ addLayer("f", {
         },
         13: {
             title: "Zombie Processing Facility",
-            description: "Death factories boost abomination effect base.",
+            description: "Death factories boost abomination gain.",
             cost() { return tmp.f.upCostMult.times(4) },
             unlocked() { return hasUpgrade("f", 12) && player.a.unlocked },
             effect() {
-                let eff = player.f.total.plus(1).log10().plus(1)
+                let eff = player.f.points
+                eff = eff.plus(1).log10().plus(player.f.points.gt(0) ? 2 : 1)
+                if (hasUpgrade("f", 31)) { eff = eff.times(2) }
                 return eff
             },
             effectDisplay() { return format(tmp.f.upgrades[13].effect)+"x" },
         },
         14: {
             title: "Adamantium Armaments",
-            description: "Square the armament effect.",
+            description: "Double the armament effect exponent.",
             cost() { return tmp.f.upCostMult.times(8) },
             unlocked() { return hasUpgrade("f", 13) },
         },
@@ -547,7 +579,7 @@ addLayer("f", {
         22: {
             title: "Field Stitching",
             description: "Armaments boost zombie gain.",
-            cost() { return tmp.f.upCostMult.times(25) },
+            cost() { return tmp.f.upCostMult.times(20) },
             unlocked() { return hasUpgrade("f", 21) },
             effect() {
                 let eff = player.f.power.pow(0.25).pow(0.5).max(1)
@@ -558,22 +590,28 @@ addLayer("f", {
         23: {
             title: "Exoskeletons",
             description: "Add +0.1 to the <h3>Bigger Zombies</h3> effect.",
-            cost() { return tmp.f.upCostMult.times(35) },
+            cost() { return tmp.f.upCostMult.times(25) },
             unlocked() { return hasUpgrade("f", 22) },
         },
         24: {
             title: "Dread",
-            description: "Multiply corpse gain by your best exterminated planets^6",
+            description() { return `Multiply corpse gain by your best planets^6${player.pt.bought ? " (^10 after Primal Terror)" : ""}` },
             cost() { return tmp.f.upCostMult.times(50) },
             unlocked() { return hasUpgrade("f", 23) && player.p.unlocked },
             effect() {
-                eff = player.p.best.plus(1)
+                eff = player.p.best.max(1)
                 effExp = new Decimal(6)
-                if (player.pt.bought) { eff = eff.plus(tmp["pt"].effect) }
+                if (player.pt.bought) { effExp = effExp.plus(tmp["pt"].effect) }
                 return eff.pow(effExp)
             },
             effectDisplay() { return format(tmp.f.upgrades[24].effect) + "x" },
         },
+        31:{
+            title: "Rapid Expansion",
+            description: "Double the <h3>Zombie Processing Facility</h3> effect and add +1 to the armament gain base.",
+            cost() { return tmp.f.upCostMult.times(75) },
+            unlocked() { return hasMilestone("p", 1) },
+        }
     }, 
     milestones: {
         0: {
@@ -590,6 +628,11 @@ addLayer("f", {
             requirementDescription: "15 death factories",
             done() { return player.f.best.gte(15) },
             effectDescription: "You can buy max death factories",
+        },
+        3: {
+            requirementDescription: "30 death factories",
+            done() { return player.f.best.gte(30) },
+            effectDescription: "Multiply the armament effect by log10 of armament amount",
         },
     },
 })
@@ -613,12 +656,13 @@ addLayer("p", {
     row: 2,                                 // The row this layer is on (0 is the first row).
     baseResource: "corpses",                 // The name of the resource your prestige gain is based on.
     baseAmount() { return player.points },  // A function to return the current amount of baseResource.
-    requires: new Decimal("1e100"),              // The amount of the base needed to  gain 1 of the prestige currency. Also the amount required to unlock the layer.
+    requires: new Decimal(1e100),              // The amount of the base needed to  gain 1 of the prestige currency. Also the amount required to unlock the layer.
     type: "static",                         // Determines the formula used for calculating prestige currency.
     exponent: 2,
     base: 5,
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
+        if (hasUpgrade("s", 12)) { mult = mult.times(new Decimal(1).div(upgradeEffect("s", 12))) }
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -636,6 +680,12 @@ addLayer("p", {
     },
     effectDescription() { 
         return "" //+(tmp.nerdMode?("\n ("+format(tmp.g.effBase)+"x each)"):"") 
+    },
+    shouldNotify: function() { 
+        for (lr in altLayers) {
+            if (tmp[lr].canClick && tmp[lr].layerShown) return true
+        }
+        return false
     },
     tabFormat: {
         "Milestones": { 
@@ -659,12 +709,18 @@ addLayer("p", {
                 "blank",
                 "clickables",
                 "blank",
-                ["tree", function() {return ALT_TREE_LAYERS }],
-            ],
+                ["tree", function() {return ALT_TREE_LAYERS }],],
+            shouldNotify: function() { 
+                for (lr in altLayers) {
+                    if (tmp[lr].canClick && tmp[lr].layerShown) return true
+                }
+                return false
+            },
+            
             unlocked() { return player.p.total.gt(0) },
         }
     },
-    canBuyMax() { return hasMilestone("p", 3) },
+    canBuyMax() { return hasMilestone("p", 4) },
     hotkeys: [
         {key: "p", description: "p: shatter this world for exterminated planets", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
@@ -700,7 +756,7 @@ addLayer("p", {
         1: {
             requirementDescription: "5 total exterminated planets",
             done() { return player.p.total.gte(5) },
-            effectDescription: "Keep zombie upgrades on all row 3 resets",
+            effectDescription: "Keep zombie upgrades on all row 3 and below resets, and unlock one more abomination and death factory upgrade",
         },
         2: {
             requirementDescription: "10 total exterminated planets",
@@ -710,8 +766,14 @@ addLayer("p", {
         3: {
             requirementDescription: "15 total exterminated planets",
             done() { return player.p.total.gte(15) },
+            effectDescription: "Keep abomination milestones on all row 3 resets",
+        },
+        4: {
+            requirementDescription: "25 total exterminated planets",
+            done() { return player.p.total.gte(25) },
             effectDescription: "You can buy max exterminated planets",
         },
+        
     },
 })
 
@@ -730,7 +792,7 @@ addLayer("w", {
     resetDescription: "Sacrifice corpses to recruit ",
     color: "#8EA018",
     branches: ["p"],
-    requires: new Decimal("1e100"), // Can be a function that takes requirement increases into account
+    requires: new Decimal(1e100), // Can be a function that takes requirement increases into account
     resource: "witch doctors", // Name of prestige currency
     baseResource: "corpses", // Name of resource prestige is based on
     baseAmount() {return player.points}, // Get the current amount of baseResource
@@ -739,7 +801,7 @@ addLayer("w", {
     hotkeys: [
         {key: "w", description: "w: sacrifice corpses to recruit witch doctors", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
-    layerShown() { return "ghost" },
+    layerShown() { return false },
     upCostMult: new Decimal(1),
 })
 
@@ -753,18 +815,27 @@ addLayer("s", {
         power: new Decimal(0),
         best: new Decimal(0),
         total: new Decimal(0),
+        11: {resets: new Decimal(0), max: new Decimal(50), costMult: function() {return this.resets.plus(1)}},
+        12: {resets: new Decimal(0), max: new Decimal(20), costMult: function() {return this.resets.plus(1)}},
+        13: {resets: new Decimal(0), max: new Decimal(10), costMult: function() {return this.resets.plus(1)}},
     }},
     resetDescription: "Transform zombies into ",
     color: "#F0E6E8",
     branches: ["a"],
-    requires: new Decimal("1e150"), // Can be a function that takes requirement increases into account
+    requires: new Decimal(1e150), // Can be a function that takes requirement increases into account
     resource: "skeleton mages", // Name of prestige currency
     baseResource: "zombies", // Name of resource prestige is based on
     baseAmount() {return player.z.points}, // Get the current amount of baseResource
     type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     exponent: 0.1, // Prestige currency exponent
+    getResetGain() {
+        gain = getResetGain("s", "normal")
+        gain = softcap("sGain", gain)
+        return gain
+    },
     gainMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
+
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -777,12 +848,13 @@ addLayer("s", {
         return base
     },
     effect() {
-        eff = Decimal.pow(this.effBase(), player.s.points).pow(0.9)
-
+        eff = Decimal.pow(this.effBase(), player.s.points).minus(1).pow(new Decimal(1).minus(player.s.points.div(5000).min(1).times(0.85)))
+        if (hasUpgrade("s", 11)) { eff = eff.times(upgradeEffect("s", 11)) }
+       //eff = softcap("mGain", eff)
         return eff
     },
     update(diff) {
-        if (player.s.unlocked) player.s.power = player.s.power.plus(tmp.s.effect.times(diff))
+        if (player.s.unlocked && player.s.points.gt(0)) player.s.power = player.s.power.plus(tmp.s.effect.times(diff))
     },
     effectDescription() { 
         return "which are producing "+format(tmp.s.effect)+" mana/sec" //+(tmp.nerdMode?("\n ("+format(tmp.g.effBase)+"x each)"):"") 
@@ -797,7 +869,9 @@ addLayer("s", {
             "blank",
             "clickables",
             "blank",
-            "buyables",],
+            "buyables",
+            "blank",
+            "upgrades"],
         },
         "Milestones": {
             content: ["main-display",
@@ -833,65 +907,102 @@ addLayer("s", {
         rows: 1,
         cols: 3,
         11: {
-            title: "Spell 1",
-            resets: new Decimal(0),
-            costMult() {
-                mult = tmp["s"].buyables[11].resets.plus(1)
-                return mult
-            },
-            cost(x=getBuyableAmount(this.layer, this.id)) { return new Decimal(5).times(tmp["s"].buyables[this.id].costMult).pow(new Decimal(1.4).pow(x)) },
+            title: "Creeping Infestation",
+            cost(x=getBuyableAmount(this.layer, this.id)) { return new Decimal(5).times(player.s[11].costMult()).times(new Decimal(10).pow(x)) },
             display() { 
-                let data = tmp[this.layer].buyables[this.id]
-                return ("Cost: " + formatWhole(data.cost) + " mana \n\
-                 Level: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n\
-                 Each level gives +1% corpse gain, necropolis generation, and armaments gain. At 100 levels you can reset to add 1% to the base boost per level.\n\
-                 Current bonus: +" + formatWhole(new Decimal(0.01).times(tmp["s"].buyables[11].resets.plus(1)).times(100)) + "% per level, +" + formatWhole(buyableEffect("s", 11).times(100)) + "% total")
+                return ("Cost: " + formatWhole(this.cost()) + " mana \n\
+                Level: " + formatWhole(getBuyableAmount("s", 11)) + "\n\
+                Each level gives +2% corpse gain, necropolis generation, and armaments gain.\n\
+                The 51st level adds 2% to the base boost per level and resets this spell."
+                + ((getBuyableAmount("s", 11) == 50) ? "\n\n<h3>NEXT LEVEL RESETS</h3>\n\n" : "\n\n")
+                + "Current bonus: +" + formatWhole(new Decimal(0.02).times(new Decimal(1).plus(player.s[11].resets).times(100))) + "% per level, +" + formatWhole(buyableEffect("s", 11).div(tmp["n"].puisEffect).times(100).minus(100).max(0))
+                + "% total (+" + formatWhole(buyableEffect("s", 11).times(100).minus(100)) + "% after puissance effect)\n\n"
+                + "<span style=\"font-size: 12px;\">reset <h3>"+player.s[11].resets+"</h3> times</span>")
             },
-            canAfford() { return player[this.layer].power.gte(tmp[this.layer].buyables[this.id].cost) },
+            canAfford() { return player.s.power.gte(this.cost()) },
             buy() {
-                if(getBuyableAmount("s", 11).lt(100)) {
-                    player[this.layer].power = player[this.layer].power.sub(tmp[this.layer].buyables[this.id].cost)
-                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                player.s.power = player.s.power.sub(this.cost())
+                if(getBuyableAmount("s", 11).lt(player.s[11].max)) {
+                    setBuyableAmount("s", 11, getBuyableAmount("s", 11).plus(1))
                 } else {
-                    player[this.layer].power = player[this.layer].power.sub(tmp[this.layer].buyables[this.id].cost)
-                    setBuyableAmount(this.layer, this.id, 0)
-                    tmp["s"].buyables[11].resets = tmp["s"].buyables[11].resets.plus(1)
+                    setBuyableAmount("s", 11, new Decimal(0))
+                    player.s[11].resets = player.s[11].resets.plus(1)
                 }
             },
             effect() {
-                exp = new Decimal(0.01).times(tmp["s"].buyables[11].resets.plus(1))
+                exp = new Decimal(0.02).times(player.s[11].resets.plus(1))
                 eff = new Decimal(1).plus(getBuyableAmount("s", 11).times(exp))
-                return eff.times(tmp["n"].puisEffect)
+                if (player.n["12"].gt(0)) { eff = eff.times(tmp["n"].puisEffect) }
+                return eff
             },
         },
         12: {
-            title: "Spell 2",
-            cost(x=getBuyableAmount(this.layer, this.id)) { return new Decimal(25).pow(new Decimal(1.4).pow(x)) },
+            title: "Eldritch Empowerment",
+            cost(x=getBuyableAmount(this.layer, this.id)) { return new Decimal(25).times(player.s[12].costMult()).pow(new Decimal(2).pow(x.pow(0.75))) },
             display() { 
-                let data = tmp[this.layer].buyables[this.id]
-                return ("Cost: " + formatWhole(data.cost) + " mana \n\
-                 Level: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n\
-                 <h3>COMING SOON</h3>")
+                if (hasMilestone("n2", 1)) {
+                    return ("Cost: " + formatWhole(this.cost()) + " mana \n\
+                    Level: " + formatWhole(getBuyableAmount("s", 12)) + "\n\
+                    Multiplies abomination effect by:\n\
+                    10*(1.05*1.1*1.15*...*(1+.05x))\n\
+                    where x is this spell's level.\n\
+                    The 21st level doubles the abomination effect base and resets this spell."
+                    + ((getBuyableAmount("s", 12) == 20) ? "\n\n<h3>NEXT LEVEL RESETS</h3>\n\n" : "\n\n")
+                    + "Current bonus: " + format(buyableEffect("s", 12).div(tmp["n"].puisEffect)) +"x (" + format(buyableEffect("s", 12)) + "x after puissance effect)\n\
+                    Current reset bonus: " + format(new Decimal(2).pow(player.s[12].resets))+"x\n\n"
+                    + "<span style=\"font-size: 12px;\">reset <h3>"+player.s[12].resets+"</h3> times</span>")
+                } else {
+                    return "\n<h3>REQUIRES 1500 SECONDS RESEARCHED</h3>"
+                }
             },
-            canAfford() { return false }, // return player[this.layer].power.gte(tmp[this.layer].buyables[this.id].cost) },
+            canAfford() { return player.s.power.gte(this.cost()) && hasMilestone("n2", 1) }, // return player[this.layer].power.gte(tmp[this.layer].buyables[this.id].cost) },
             buy() {
-                player[this.layer].power = player[this.layer].power.sub(tmp[this.layer].buyables[this.id].cost)
-                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                player.s.power = player.s.power.sub(this.cost())
+                if(getBuyableAmount("s", 12).lt(player.s[12].max)) {
+                    setBuyableAmount("s", 12, getBuyableAmount("s", 12).plus(1))
+                } else {
+                    setBuyableAmount("s", 12, new Decimal(0))
+                    player.s[12].resets = player.s[12].resets.plus(1)
+                }
+            },
+            effect() {
+                eff = new Decimal(10)
+                for (i=0; i<=getBuyableAmount("s", 12); i++) { eff = eff.times(1+(0.05*i)) }
+                if (player.n["12"].gt(0)) { eff = eff.times(tmp["n"].puisEffect) }
+                return eff
             },
         },
         13: {
-            title: "Spell 3",
-            cost(x=getBuyableAmount(this.layer, this.id)) { return new Decimal(100).pow(new Decimal(1.4).pow(x)) },
+            title: "Forbidden Knowledge",
+            cost(x=getBuyableAmount(this.layer, this.id)) { return new Decimal(100).times(player.s[13].costMult()).pow(new Decimal(2.5).pow(x.pow(0.85))) },
             display() { 
-                let data = tmp[this.layer].buyables[this.id]
-                return ("Cost: " + formatWhole(data.cost) + " mana \n\
-                 Level: " + formatWhole(getBuyableAmount(this.layer, this.id)) + "\n\
-                 <h3>COMING SOON</h3>")
+                if (hasMilestone("n2", 2)) {
+                    return ("Cost: " + formatWhole(this.cost()) + " mana \n\
+                    Level: " + formatWhole(getBuyableAmount("s", 13)) + "\n\
+                    Adds log(x+1)/2 to your research gain, where x is this spell's level.\n\
+                    The 11th level adds a permanent +0.5 to research gain and resets this spell."
+                    + ((getBuyableAmount("s", 13) == 10) ? "\n\n<h3>NEXT LEVEL RESETS</h3>\n\n" : "\n\n")
+                    + "Current bonus: +" + formatWhole(buyableEffect("s", 13)) + "\n\
+                    Current reset bonus: +" + format(new Decimal(0.5).times(player.s[13].resets))+"\n\n"
+                    + "<span style=\"font-size: 12px;\">reset <h3>"+player.s[13].resets+"</h3> times</span>")
+                } else {
+                    return "\n<h3>REQUIRES 3000 SECONDS RESEARCHED</h3>"
+                }
             },
-            canAfford() { return false }, // return player[this.layer].power.gte(tmp[this.layer].buyables[this.id].cost) },
+            canAfford() { return player.s.power.gte(this.cost()) && hasMilestone("n2", 2) }, // return player[this.layer].power.gte(tmp[this.layer].buyables[this.id].cost) },
             buy() {
-                player[this.layer].power = player[this.layer].power.sub(tmp[this.layer].buyables[this.id].cost)
-                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                player.s.power = player.s.power.sub(this.cost())
+                if(getBuyableAmount("s", 13).lt(player.s[13].max)) {
+                    setBuyableAmount("s", 13, getBuyableAmount("s", 13).plus(1))
+                } else {
+                    setBuyableAmount("s", 13, new Decimal(0))
+                    player.s[13].resets = player.s[13].resets.plus(1)
+                }
+            },
+            effect() {
+                exp = getBuyableAmount("s", 13).plus(1)
+                exp = exp.log10().div(2)
+                return exp
             },
         },
     },
@@ -901,8 +1012,53 @@ addLayer("s", {
             done() { return player.s.best.gte(1) },
             effectDescription: "Abomination autobuyer",
             toggles: [["a", "auto"]],
+        },
+        1: {
+            requirementDescription: "100 skeleton mages",
+            done() { return player.s.best.gte(100) },
+            effectDescription: "Keep abomination upgrades on reset",
         }
     },
+    upgrades: {
+        rows: 1,
+        cols: 5,
+        11: {
+            title: "Souls of the Damned",
+            description: "Mana production is boosted by exterminated planets.",
+            cost() { return tmp.s.upCostMult.times(new Decimal(1e50)) },
+            effect() {
+                eff = player.p.points
+                return eff.pow(4)
+            },
+            effectDisplay() { return `${format(upgradeEffect("s", 11))}x` },
+            canAfford() { return player.s.power.gte(tmp["s"].upgrades[11].cost) },
+            pay() { if (player.s.power.gte(tmp["s"].upgrades[11].cost)) { player.s.power = player.s.power.minus(tmp["s"].upgrades[11].cost) } },
+            currencyDisplayName: "mana",
+        },
+        12: {
+            title: "Skeleton Warriors",
+            description: "Exterminated planet gain is boosted by skeleton mages.",
+            unlocked() { return hasUpgrade("s", 11) },
+            cost() { return tmp.s.upCostMult.times(new Decimal(1e100)) },
+            effect() {
+                eff = player.s.power
+                return eff.pow(2)
+            },
+            effectDisplay() { return `${format(upgradeEffect("s", 12))}x` },
+            canAfford() { return player.s.power.gte(tmp["s"].upgrades[12].cost) },
+            pay() { if (player.s.power.gte(tmp["s"].upgrades[12].cost)) { player.s.power = player.s.power.minus(tmp["s"].upgrades[12].cost) } },
+            currencyDisplayName: "mana",
+        },
+        13: {
+            title: "True Wizardry",
+            description: "Double research time gained (but not research).",
+            unlocked() { return hasUpgrade("s", 12) },
+            cost() { return tmp.s.upCostMult.times(new Decimal(1e200)) },
+            canAfford() { return player.s.power.gte(tmp["s"].upgrades[13].cost) },
+            pay() { if (player.s.power.gte(tmp["s"].upgrades[13].cost)) { player.s.power = player.s.power.minus(tmp["s"].upgrades[13].cost) } },
+            currencyDisplayName: "mana",
+        },
+    }
 })
 
 addLayer("g2", {
@@ -993,10 +1149,14 @@ addLayer("n", {
         {key: "n", description: "n: annihilate planets to form necropoli", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
     pestLimit() {
-        return new Decimal(12).pow(player.n.points).times(tmp["n"].pestEffect.sqrt())
+        lim = new Decimal(12).pow(player.n.points).times(tmp["n"].pestEffect.sqrt())
+        if (hasUpgrade("n", 13)) { lim = lim.pow(2) }
+        return lim
     },
     puisLimit() {
-        return new Decimal(12).pow(player.n.points).times(tmp["n"].puisEffect.times(2))
+        lim = new Decimal(12).pow(player.n.points).times(tmp["n"].puisEffect.times(2))
+        if (hasUpgrade("n", 13)) { lim = lim.pow(2) }
+        return lim
     },
     pestEffect() {
         eff = player.n["11"]
@@ -1010,7 +1170,7 @@ addLayer("n", {
     },
     resEffect() {
         eff = new Decimal(player.n.resTime).plus(1)
-        eff = eff.log10().times(2)
+        eff = eff.log10().times(200)
         return eff
     },
     layerShown() { return player.p.unlocked },
@@ -1037,6 +1197,9 @@ addLayer("n", {
     onPrestige(gain) {
         player.p.points = player.p.points.minus(gain).max(0)
     },
+    prestigeNotify() {
+        return tmp["n"].canReset
+    },
     update(diff) {
         
         if (player.n.unlocked) {
@@ -1047,9 +1210,7 @@ addLayer("n", {
             }
         }
     },
-    prestigeNotify() {
-        return tmp["n"].canReset
-    },
+
     componentStyles: {
         "clickable"() { return {"color": "rgba(216, 216, 216, 0.75)"} },
         "prestige-button"() { return {"color": "rgba(216, 216, 216, 0.75)"} },
@@ -1083,7 +1244,7 @@ addLayer("n", {
                     return "You have " + format(player["n"]["11"]) + " pestilence and are gaining " + format(clickableEffect("n", 11).times(getClickableState("n", 11))) + "/s, capped at " + format(tmp["n"].pestLimit) + "<br>" + 
                     "Your pestilence is boosting your corpse gain by " + format(tmp["n"].pestEffect) + "x and pestilence cap by the sqrt of the corpse boost, " + format(tmp["n"].pestEffect.sqrt()) + "x<br><br>" +
                     "You have " + format(player["n"]["12"]) + " puissance and are gaining " + format(clickableEffect("n", 12).times(getClickableState("n", 12))) + "/s, capped at " + format(tmp["n"].puisLimit) + "<br>" + 
-                    "Your puissance is boosting your spell power by " + format(tmp["n"].puisEffect) + "x and puissance cap by the spell boost doubled, " + format(tmp["n"].puisEffect.times(2)) + "x<br><br>" +
+                    "Your puissance is boosting the first two spells' effects by " + format(tmp["n"].puisEffect) + "x and puissance cap by the spell boost doubled, " + format(tmp["n"].puisEffect.times(2)) + "x<br><br>" +
                     "You have " + format(player.n["13"]) + " research and are gaining " + format(clickableEffect("n", 13).times(getClickableState("n", 13))) + "/s<br>" +
                     "You have produced " + format(player.n["13total"]) + " total research<br>" +
                     "You have spent " + format(player.n["resTime"]) + " seconds researching<br>While researching, your total research time is boosting the armament effect by " + format(tmp["n"].resEffect) + "x"
@@ -1139,7 +1300,7 @@ addLayer("n", {
             },
             effect() {
                 eff = player.n.points
-                eff = eff.pow(0.5).max(1).plus(player.n["11"].log10().div(2))
+                eff = eff.pow(0.5).max(1).plus(player.n["11"].plus(1).log10().div(2))
                 if (player.pp.bought) { eff = eff.times(tmp["pp"].ptEffect) }
                 return eff
             },
@@ -1147,7 +1308,7 @@ addLayer("n", {
         12: {
             title: "Ritual Chanting",
             power: "puissance",
-            display() {return "Generates puissance based on your necropoli, which boosts spell power."},
+            display() {return "Generates puissance based on your necropoli, which boosts the first two spells' effects."},
             canClick() { return (player.n.unlocked && player.n.points.gt(0)) },
             onClick() { 
                 if (getClickableState("n", 12)) { 
@@ -1190,6 +1351,9 @@ addLayer("n", {
             effect() {
                 eff = player.n.points
                 eff = eff.pow(0.5).max(1)
+                eff = eff.plus(new Decimal(0.5).times(player.s[13].resets))
+                if (getBuyableAmount("s", 13).gt(0)) eff = eff.plus(buyableEffect("s", 13))
+                if (player.fc.bought) { eff = eff.times(tmp["fc"].effect) }
                 return eff
             },
         },
@@ -1200,7 +1364,8 @@ addLayer("n", {
         11: {
             title: "Galactic Weapons Lockers",
             description: "Each necropolis multiplies the armament limit by 1.1.",
-            canAfford() { return player.n.unlocked && player.n["13"].gte(this.cost) },
+            unlocked() { return player.n.unlocked },
+            canAfford() { return player.n["13"].gte(this.cost) },
             pay() { if (player.n["13"].gte(this.cost)) { player.n["13"] = player.n["13"].minus(this.cost) } },
             cost: new Decimal(25),
             currencyDisplayName: "research",
@@ -1212,13 +1377,46 @@ addLayer("n", {
             effectDisplay() { return format(upgradeEffect("n", 11)) + "x" },
         },
         12: {
-            title: "Spoils of War",
-            description: "Boost armament generation based on necropoli.",
-            canAfford() { return player.n.unlocked && player.n["13"].gte(this.cost) },
+            title: "Reanimation Field",
+            description: "The abomination effect also boosts zombie gain with reduced effect.",
+            unlocked() { return hasUpgrade("n", 11) },
+            canAfford() { return player.n["13"].gte(this.cost) },
             pay() { if (player.n["13"].gte(this.cost)) { player.n["13"] = player.n["13"].minus(this.cost) } },
             cost: new Decimal(250),
             currencyDisplayName: "research",
-            effectDisplay() { return format(player.n.points.pow(3)) + "x" },
+            effect() {
+                eff = tmp["a"].effect
+                eff = eff.pow(1/3)
+                return eff.max(1)
+            },
+            effectDisplay() { return format(upgradeEffect("n", 12)) + "x" },
+        },
+        13: {
+            title: "Arcane Storehouses",
+            description: "Square the pestilence and puissance limits.",
+            unlocked() { return hasUpgrade("n", 12) },
+            canAfford() { return player.n["13"].gte(this.cost) },
+            pay() { if (player.n["13"].gte(this.cost)) { player.n["13"] = player.n["13"].minus(this.cost) } },
+            cost: new Decimal(10000),
+            currencyDisplayName: "research",
+        },
+        14: {
+            title: "Foul Sentience",
+            description: "Double the <h3>Master Necromancer</h3> effect.",
+            unlocked() { return hasUpgrade("n", 13) },
+            canAfford() { return player.n["13"].gte(this.cost) },
+            pay() { if (player.n["13"].gte(this.cost)) { player.n["13"] = player.n["13"].minus(this.cost) } },
+            cost: new Decimal(50000),
+            currencyDisplayName: "research",
+        },
+        15: {
+            title: "As Above, So Below",
+            description: "Unlock more zombie upgrades.",
+            unlocked() { return hasUpgrade("n", 14) },
+            canAfford() { return player.n["13"].gte(this.cost) },
+            pay() { if (player.n["13"].gte(this.cost)) { player.n["13"] = player.n["13"].minus(this.cost) } },
+            cost: new Decimal(100000),
+            currencyDisplayName: "research",
         },
     }
     
@@ -1246,7 +1444,19 @@ addLayer("n1", {
             effectDescription: "Death factory autobuyer",
             done() { return player.n["13total"].gte(500) },
             toggles: [["f", "auto"]],
-            style() { return {'width': '100%'} },
+            style() { return {'width': '100%'} }
+        },
+        1: {
+            requirementDescription: "5000 total research",
+            effectDescription: "Keep death factory upgrades on reset",
+            done() { return player.n["13total"].gte(5000) },
+            style() { return {'width': '100%'} }
+        },
+        2: {
+            requirementDescription: "15000 total research",
+            effectDescription: "Unlock the fourth row of skills",
+            done() { return player.n["13total"].gte(15000) },
+            style() { return {'width': '100%'} }
         },
     },
 })
@@ -1274,6 +1484,18 @@ addLayer("n2", {
             done() { return player.n["resTime"].gte(500) },
             style() { return {'width': '100%'} },
         },
+        1: {
+            requirementDescription: "1500 seconds of research",
+            effectDescription: "Unlock the second skeleton spell",
+            done() { return player.n["resTime"].gte(1500) },
+            style() { return {'width': '100%'} }
+        },
+        2: {
+            requirementDescription: "3000 seconds of research",
+            effectDescription: "Unlock the third skeleton spell",
+            done() { return player.n["resTime"].gte(3000) },
+            style() { return {'width': '100%'} }
+        },
     },
 })
 
@@ -1294,231 +1516,59 @@ addLayer("g3", {
     layerShown() { return "ghost" }            // Returns a bool for if this layer's node should be visible in the tree.
 })
 
-addAltNode("mn", {
+addLayer("as", {
+    name: "ascensions", // This is optional, only used in a few places, If absent it just uses the layer id.
+    symbol: "AS", // This appears on the layer's node. Default is the id with the first letter capitalized
+    position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
     startData() { return {                  // startData is a function that returns default data for a layer. 
-        unlocked: true,                     // You can add more variables here to add them to your layer.
-        points: new Decimal(1),             // "points" is the internal name for the main resource of the layer.
-        cost: new Decimal(1),
-        bought: false,
-    }}, 
-    color: "#0D58C4",
-    fullName: "Master Necromancer",
-    fullDesc: function() { return `x${formatWhole(this.effect())} to all previous prestige gains.` },
-    effectDesc: function() {
-        return ""
-    },
-    branches: [],
-    researchNeeded: [],
-    researchCompleted: true,
-    symbol: "MN",
-    row: 0,
+        unlocked: false,                     // You can add more variables here to add them to your layer.
+        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
+        total: new Decimal(0),
+    }},
+    branches: ["s", "p", "n"],
     position: 0,
-    effect() {
-        eff = new Decimal(2)
-        return eff
+    row: 3,
+    resetDescription: "Attain godhood for ",
+    color: "#000000",
+    requires: new Decimal(1e308), // Can be a function that takes requirement increases into account
+    resource: "ascensions", // Name of prestige currency
+    baseResource: "corpses", // Name of resource prestige is based on
+    altBaseResource: "necropoli",
+    baseAmount() {return player.points},
+    type: "none",                         // Determines the formula used for calculating prestige currency.
+    exponent: 2,
+    base: 7,
+    layerShown() { return (player.bestPoints.gte(1e225) && player.n.unlocked && player.s.unlocked)},
+    hotkeys: [
+        {key: "n", description: "n: annihilate planets to form necropoli", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+    ],
+    canBuyMax() { return true },
+    upCostMult: new Decimal(1),
+    getResetGain() {
+        if (tmp[this.layer].baseAmount.lt(getNextAt("n", false, "static"))) { return new Decimal(0) }
+        var gainOnR = getResetGain("n", "static")
+        return gainOnR.min(player.p.points)
     },
-    layerShown() { return true },
-    canClick: function() { return (getExpPoints().gte(player[this.layer].cost) && !player[this.layer].bought && prereqsPurchased(this.layer) && this.researchCompleted) },
-    onClick() { 
-        if (this.canClick) {
-            player.p.spent = player.p.spent.plus(player[this.layer].cost)
-            player[this.layer].bought = true
-        }
+    getNextAt() {
+        return getNextAt(this.layer, true, "static")
     },
-    tooltip() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
+    canReset() {
+        let gainOnR = getResetGain(this.layer, false, "static")
+        return (gainOnR.gte(1))
     },
-    tooltipLocked() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
+    prestigeButtonText() {
+        return `${tmp[this.layer].resetDescription}+<b>${formatWhole(tmp[this.layer].resetGain)}</b> ${tmp[this.layer].resource}<br><br>Next at: ${formatWhole(getNextAt("n", true, "static")) + " " + tmp[this.layer].baseResource} and ${formatWhole(tmp[this.layer].getResetGain.plus(1)) + " " + (tmp[this.layer].altBaseResource)}`
     },
-}) 
-
-/* addAltNode("g8", {
-    startData() { return {                  // startData is a function that returns default data for a layer. 
-        unlocked: true,                     // You can add more variables here to add them to your layer.
-        points: new Decimal(1),             // "points" is the internal name for the main resource of the layer.
-        cost: new Decimal(1),
-        bought: false,
-    }}, 
-    color: "#0D58C4",
-    symbol: "g4",
-    row: 1,
-    position: 1,
-    effect() {
-        eff = new Decimal(2)
-        return eff
+    tooltipLocked() {
+        return `Reach ${format(tmp[this.layer].requires)} ${tmp[this.layer].baseResource} and 1 ${tmp[this.layer].altBaseResource} to unlock (You have ${format(tmp[this.layer].baseAmount)} ${tmp[this.layer].baseResource})`
     },
-    layerShown() { return "ghost" },
-    canClick() { return true }, //(player.p.total.minus(player.p.spent)).gte(player.m.cost) },
-    onClick() { 
-        
+    onPrestige(gain) {
+        player.p.points = player.p.points.minus(gain).max(0)
     },
-    tooltip() { return "Coming soon" },
-    tooltipLocked() { return "Coming soon" },
-}) */
-
-addAltNode("pt", {
-    startData() { return {                  // startData is a function that returns default data for a layer. 
-        unlocked: true,                     // You can add more variables here to add them to your layer.
-        points: new Decimal(1),             // "points" is the internal name for the main resource of the layer.
-        cost: new Decimal(2),
-        bought: false,
-    }}, 
-    color: "#0D58C4",
-    fullName: "Primal Terror",
-    fullDesc: function() { return `Add ${formatWhole(this.effect())} to the Fear and Dread exponents.` },
-    effectDesc: function() {
-        return ""
+    prestigeNotify() {
+        return tmp["n"].canReset
     },
-    researchNeeded: [],
-    researchCompleted: true,
-    symbol: "PT",
-    branches: ["mn"],
-    row: 1,
-    position: 0,
-    effect() {
-        eff = new Decimal(4)
-        return eff
-    },
-    layerShown() { return true },
-    canClick: function() { return (getExpPoints().gte(player[this.layer].cost) && !player[this.layer].bought && prereqsPurchased(this.layer) && this.researchCompleted) },
-    onClick() { 
-        if (this.canClick) {
-            player.p.spent = player.p.spent.plus(player[this.layer].cost)
-            player[this.layer].bought = true
-        }
-    },
-    tooltip() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
-    },
-    tooltipLocked() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
-    },
-}) 
-
-/addAltNode("g4", {
-    startData() { return {                  // startData is a function that returns default data for a layer. 
-        unlocked: true,                     // You can add more variables here to add them to your layer.
-        points: new Decimal(1),             // "points" is the internal name for the main resource of the layer.
-        cost: new Decimal(1),
-        bought: false,
-    }}, 
-    color: "#0D58C4",
-    symbol: "g4",
-    row: 2,
-    position: 1,
-    effect() {
-        eff = new Decimal(2)
-        return eff
-    },
-    layerShown() { return "ghost" },
-    canClick() { return true }, //(player.p.total.minus(player.p.spent)).gte(player.m.cost) },
-    onClick() { 
-        
-    },
-    tooltip() { return "Coming soon" },
-    tooltipLocked() { return "Coming soon" },
-}) 
-
-addAltNode("wd", {
-    startData() { return {                  // startData is a function that returns default data for a layer. 
-        unlocked: true,                     // You can add more variables here to add them to your layer.
-        points: new Decimal(1),             // "points" is the internal name for the main resource of the layer.
-        cost: new Decimal(3),
-        bought: false,
-    }}, 
-    color: "#0D58C4",
-    fullName: "Wisdom & Dishonor",
-    fullDesc: function() { return `Unspent experience points boost corpse gain, and sqrt of spent experience points boosts zombie gain.` },
-    effectDesc: function() {
-        return `${format(this.cEffect())}x to corpse gain and ${format(this.zEffect())}x to zombie gain.`
-    },
-    researchNeeded: ["n2", 0],
-    researchCompleted: function() { return hasMilestone(this.researchNeeded[0], this.researchNeeded[1]) },
-    symbol: "WD",
-    branches: ["pt"],
-    row: 2,
-    position: 0,
-    
-    effExp() {
-        exp = new Decimal(2)
-        return exp
-    },
-    effect() {
-        eff = new Decimal(10)
-        return eff
-    },
-    cEffect() {
-        return this.effect().times(getExpPoints()).pow(this.effExp()).max(1)
-    },
-    zEffect() {
-        return this.effect().times(player.p.spent.sqrt()).pow(this.effExp()).max(1)
-    },
-    layerShown() { return true },
-    canClick: function() { return (getExpPoints().gte(player[this.layer].cost) && !player[this.layer].bought && prereqsPurchased(this.layer) && this.researchCompleted) },
-    onClick() { 
-        if (this.canClick) {
-            player.p.spent = player.p.spent.plus(player[this.layer].cost)
-            player[this.layer].bought = true
-        }
-    },
-    tooltip() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
-    },
-    tooltipLocked() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
-    },
-}) 
-
-
-addAltNode("pp", {
-    startData() { return {                  // startData is a function that returns default data for a layer. 
-        unlocked: true,                     // You can add more variables here to add them to your layer.
-        points: new Decimal(1),             // "points" is the internal name for the main resource of the layer.
-        cost: new Decimal(3),
-        bought: false,
-    }}, 
-    color: "#0D58C4",
-    fullName: "Putrid Pathfinders",
-    fullDesc: function() { return `Pestilence and puissance boost each others' gains.` },
-    effectDesc: function() {
-        return `${format(tmp["pp"].ptEffect)}x to pestilence and ${format(tmp["pp"].psEffect)}x to puissance.`
-    },
-    researchNeeded: ["n2", 0],
-    researchCompleted: function() { return hasMilestone(this.researchNeeded[0], this.researchNeeded[1]) },
-    symbol: "PP",
-    branches: ["pt"],
-    row: 2,
-    position: 2,
-    effect() {
-        eff = new Decimal(10)
-        return eff
-    },
-    ptEffect() {
-        eff = player["n"]["12"]
-        eff = eff.sqrt().times(player["n"]["12"].min(tmp["pp"].effect)).div(3).max(1)
-        return eff
-    },
-    psEffect() {
-        eff = player["n"]["11"]
-        eff = eff.sqrt().times(player["n"]["11"].min(tmp["pp"].effect)).div(3).max(1)
-        return eff
-    },
-    layerShown() { return true },
-    canClick: function() { return (getExpPoints().gte(player[this.layer].cost) && !player[this.layer].bought && prereqsPurchased(this.layer) && this.researchCompleted) },
-    onClick: function() { 
-        if (this.canClick) {
-            player.p.spent = player.p.spent.plus(player[this.layer].cost)
-            player[this.layer].bought = true
-        }
-    },
-    tooltip() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
-    },
-    tooltipLocked() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
-    },
-}) 
+})
 
 addNode( "plus", {
     name: "addspeed",
@@ -1558,4 +1608,24 @@ addNode( "minus", {
     onClick: function() { player["devSpeed"] -= 1 },
     tooltip() { return "-1 dev speed"},
     tooltipLocked() { return "-1 dev speed\nalready at 0" },
+})
+
+addNode( "dev", {
+    name: "devStuff",
+    symbol: "*",
+    startData() { return {                  // startData is a function that returns default data for a layer. 
+        unlocked: true,                     // You can add more variables here to add them to your layer.
+        points: new Decimal(1),
+        bought: false,          
+    }}, 
+    layerShown() { return true },
+    notify: false,
+    prestigeNotify: false,
+    row: "side",
+    position: 1,
+    color: "#ffffff",
+    canClick() { return true },
+    onClick: function() { updateLayers() },
+    tooltip() { return "dev"},
+    tooltipLocked() { return "dev" },
 })

@@ -140,6 +140,10 @@ function layerDataReset(layer, keep = []) {
 	if (layers[layer] === undefined) {return}
 
 	let storedData = {unlocked: player[layer].unlocked} // Always keep unlocked
+	for (id in player[layer].milestones) {
+		if (player.pastMilestones[layer] === undefined) player.pastMilestones[layer] = []
+		if (hasMilestone(layer, id) && !player.pastMilestones[layer].includes(id)) player.pastMilestones[layer].push(id)
+	}
 
 	for (thing in keep) {
 		if (player[layer][keep[thing]] !== undefined)
@@ -335,6 +339,7 @@ function gameLoop(diff) {
 	}
 	addTime(diff)
 	player.points = player.points.add(tmp.pointGen.times(diff)).max(0)
+	player.bestPoints = player.points.max(player.bestPoints)
 
 	for (x = 0; x <= maxRow; x++){
 		for (item in TREE_LAYERS[x]) {
