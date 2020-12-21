@@ -42,7 +42,7 @@ addAltNode("pt", {
     startData() { return {                  // startData is a function that returns default data for a layer. 
         unlocked: true,                     // You can add more variables here to add them to your layer.
         points: new Decimal(1),             // "points" is the internal name for the main resource of the layer.
-        cost: new Decimal(2),
+        cost: new Decimal(4),
         bought: false,
     }}, 
     color: "#0D58C4",
@@ -232,7 +232,7 @@ addAltNode("fl", {
         return eff.max(1)
     },
     layerShown() { return true },
-    canClick: function() { return (getExpPoints().gte(player[this.layer].cost) && !player[this.layer].bought && prereqsPurchased(this.layer) && this.researchCompleted()) },
+    canClick: function() { return false },//(getExpPoints().gte(player[this.layer].cost) && !player[this.layer].bought && prereqsPurchased(this.layer) && this.researchCompleted()) },
     onClick() { 
         if (this.canClick) {
             player.p.spent = player.p.spent.plus(player[this.layer].cost)
@@ -240,10 +240,10 @@ addAltNode("fl", {
         }
     },
     tooltip() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
+        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}\nCURRENTLY PERMA-LOCKED`
     },
     tooltipLocked() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
+        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}\nCURRENTLY PERMA-LOCKED`
     },
 }) 
 
@@ -286,7 +286,7 @@ addAltNode("pd", {
         return eff
     },
     layerShown() { return true },
-    canClick: function() { return (getExpPoints().gte(player[this.layer].cost) && !player[this.layer].bought && prereqsPurchased(this.layer) && this.researchCompleted()) },
+    canClick: function() { return false },//(getExpPoints().gte(player[this.layer].cost) && !player[this.layer].bought && prereqsPurchased(this.layer) && this.researchCompleted()) },
     onClick() { 
         if (this.canClick) {
             player.p.spent = player.p.spent.plus(player[this.layer].cost)
@@ -294,10 +294,10 @@ addAltNode("pd", {
         }
     },
     tooltip() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
+        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}\nCURRENTLY PERMA-LOCKED`
     },
     tooltipLocked() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
+        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}\nCURRENTLY PERMA-LOCKED`
     },
 }) 
 
@@ -340,7 +340,7 @@ addAltNode("fc", {
         return eff
     },
     layerShown() { return true },
-    canClick: function() { return (getExpPoints().gte(player[this.layer].cost) && !player[this.layer].bought && prereqsPurchased(this.layer) && this.researchCompleted()) },
+    canClick: function() { return false }, //(getExpPoints().gte(player[this.layer].cost) && !player[this.layer].bought && prereqsPurchased(this.layer) && this.researchCompleted()) },
     onClick() { 
         if (this.canClick) {
             player.p.spent = player.p.spent.plus(player[this.layer].cost)
@@ -348,9 +348,9 @@ addAltNode("fc", {
         }
     },
     tooltip() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
+        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}\nCURRENTLY PERMA-LOCKED`
     },
     tooltipLocked() { 
-        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}`
+        return `${this.fullName}\n\n${this.fullDesc()}\n\n${(this.effectDesc() != "") ? "Currently: " + this.effectDesc() + "\n\n" : ""}${getUnmetReqs(this.layer)}\nCURRENTLY PERMA-LOCKED`
     },
 }) 

@@ -244,6 +244,14 @@ function loadVue() {
 		`
 	})
 
+	// Displays alt resource for the layer
+	Vue.component('alt-main-display', {
+		props: ['layer'],
+		template: `
+		<div><span v-if="getExpPoints().lt('1e1000')">You have </span><h2 v-bind:style="(tmp[layer].color == '#000000')?{'color': '#ffffff', 'text-shadow': '0px 0px 10px #ffffff'}: {'color': tmp[layer].color, 'text-shadow': '0px 0px 10px' + tmp[layer].color}">{{formatWhole(getExpPoints())}}</h2> experience points<span v-if="tmp[layer].effectDescription">, <span v-html="tmp[layer].effectDescription"></span></span><br><br></div>
+		`
+	})
+
 	// Displays the base resource for the layer, as well as the best and total values for the layer's currency, if tracked
 	Vue.component('resource-display', {
 		props: ['layer'],
