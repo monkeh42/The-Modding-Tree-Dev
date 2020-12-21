@@ -12,8 +12,8 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.2.2",
-	name: "Pyromaniac Pre-Teen",
+	num: "0.3.0",
+	name: "Terrible Teen",
 }
 
 let changelog = `<h1>Changelog:</h1><br>

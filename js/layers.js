@@ -1591,7 +1591,7 @@ addLayer("as", {
     tooltipLocked() { return "COMING SOON" },
 })
 
-addNode( "plus", {
+/*addNode( "plus", {
     name: "addspeed",
     symbol: "+",
     startData() { return {                  // startData is a function that returns default data for a layer. 
@@ -1649,4 +1649,4 @@ addNode( "dev", {
     onClick: function() { updateLayers() },
     tooltip() { return "dev"},
     tooltipLocked() { return "dev" },
-})
+})*/
